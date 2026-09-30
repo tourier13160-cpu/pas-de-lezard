@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pas-de-Lézard ! — Le jeu où l'on gagne au mérite (100% gratuit)</title>
+    <meta name="description" content="Jeu gratuit sans tirage au sort : 2 énigmes visuelles cachées dans une boutique partenaire, un classement certifié à la milliseconde. Aucun numéro de téléphone pour jouer.">
+
+    <!-- Paramètres PWA / Application Mobile -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#22d3a8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pas-de-Lézard">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #0b1220;
+            --card-bg: #131f38;
+            --card-bg-2: #16213e;
+            --primary: #22d3a8;
+            --primary-dark: #14b892;
+            --primary-soft: rgba(34, 211, 168, 0.12);
+            --accent: #ffb84d;
+            --accent-soft: rgba(255, 184, 77, 0.12);
+            --danger: #ff6b6b;
+            --info: #6ea8ff;
+            --text-main: #f3f6fb;
+            --text-muted: #93a0bd;
+            --border-color: #223256;
+            --font-display: 'Sora', system-ui, sans-serif;
+            --font-body: 'Inter', system-ui, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-dark);
+            background-image:
+                radial-gradient(circle at 15% 0%, rgba(34, 211, 168, 0.10), transparent 45%),
+                radial-gradient(circle at 85% 15%, rgba(255, 184, 77, 0.08), transparent 40%),
+                radial-gradient(circle at 50% 100%, rgba(34, 211, 168, 0.06), transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 1.5rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        h1, h2, h3, h4, h5, .logo, .wave-title, .btn-inscrire, .badge-gratuit, .section-title { font-family: var(--font-display); }
+
+        .main-content { max-width: 1180px; width: 100%; margin: 0 auto; animation: fadeIn 0.6s ease; }
+
+        /* ---- Animations ---- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.55; } 100% { opacity: 1; } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-6px) rotate(-3deg); } }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 168, 0.18); } 50% { box-shadow: 0 0 34px rgba(34, 211, 168, 0.32); } }
+        @keyframes gradientSlide { to { background-position: 300% 0; } }
+        @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(255,77,77,0.6); } 100% { box-shadow: 0 0 0 10px rgba(255,77,77,0); } }
+        @keyframes fillUp { to { width: var(--fill, 0%); } }
+        @keyframes tickerSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+
+        /* ---- Barre de progression de scroll ---- */
+        #scrollBar { position: fixed; top: 0; left: 0; height: 3px; width: 0; background: linear-gradient(90deg, var(--primary), var(--accent)); z-index: 10000; transition: width 0.1s linear; }
+
+        /* ---- Bandeau phase de test ---- */
+        .test-banner { background: rgba(110, 168, 255, 0.10); border: 1px dashed rgba(110, 168, 255, 0.45); color: var(--info); border-radius: 12px; padding: 0.6rem 1rem; font-size: 0.8rem; text-align: center; margin-bottom: 1.25rem; font-weight: 600; }
+
+        /* ---- Navbar ---- */
+        nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding: 0.25rem 0.5rem; flex-wrap: wrap; gap: 1rem; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; font-size: 1.3rem; color: var(--text-main); text-decoration: none; letter-spacing: -0.02em; }
+        .logo-icon { background: linear-gradient(145deg, #ffffff, #dbe9ff); color: var(--primary-dark); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; box-shadow: 0 4px 14px rgba(0,0,0,0.35); }
+        .badge-gratuit { background: var(--primary-soft); color: var(--primary); padding: 0.35rem 0.9rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700; border: 1px solid rgba(34, 211, 168, 0.28); letter-spacing: 0.02em; }
+
+        .btn-inscrire { position: relative; overflow: hidden; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #06251d; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 700; text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease; cursor: pointer; border: none; font-size: 1rem; min-height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(34, 211, 168, 0.25); }
+        .btn-inscrire::after { content: ""; position: absolute; top: 0; left: -120%; width: 60%; height: 100%; background: linear-gradient(120deg, transparent, rgba(255,255,255,0.45), transparent); transform: skewX(-20deg); transition: left 0.6s ease; }
+        .btn-inscrire:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(34, 211, 168, 0.35); }
+        .btn-inscrire:hover::after { left: 160%; }
+        .btn-inscrire:active { transform: translateY(0); }
+
+        /* ---- Ticker ---- */
+        .live-ticker { background: linear-gradient(90deg, rgba(34,211,168,0.10), rgba(255,184,77,0.06)); border: 1px solid rgba(34,211,168,0.25); border-radius: 14px; padding: 0.85rem 1.25rem; margin-bottom: 1.75rem; display: flex; align-items: center; gap: 1rem; overflow: hidden; backdrop-filter: blur(6px); }
+        .live-badge { background: var(--primary); color: #06251d; font-size: 0.72rem; font-weight: 800; padding: 0.3rem 0.6rem; border-radius: 6px; text-transform: uppercase; animation: pulse 2s infinite; white-space: nowrap; letter-spacing: 0.04em; }
+        .live-stream-text { font-size: 0.9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; flex: 1; }
+        .live-stream-text.slide { animation: tickerSlide 0.5s ease; }
+        .demo-tag { font-size: 0.65rem; font-weight: 800; color: var(--info); border: 1px solid rgba(110,168,255,0.4); border-radius: 6px; padding: 0.15rem 0.45rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+
+        /* ---- Hero ---- */
+        .hero { background: linear-gradient(165deg, var(--card-bg-2), var(--card-bg)); border: 1px solid var(--border-color); border-radius: 24px; padding: 3rem 1.75rem; text-align: center; margin-bottom: 2.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45); position: relative; overflow: hidden; }
+        .hero::before { content: ""; position: absolute; top: -60%; left: 50%; transform: translateX(-50%); width: 120%; height: 200%; background: radial-gradient(circle, rgba(34,211,168,0.12), transparent 60%); pointer-events: none; }
+        .hero h1 { font-size: 2.7rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.9rem; position: relative; line-height: 1.15;
+            background: linear-gradient(90deg, var(--text-main), var(--primary), var(--accent), var(--text-main)); background-size: 300% 100%;
+            -webkit-background-clip: text; background-clip: text; color: transparent; animation: gradientSlide 7s linear infinite; }
+        .hero p.subtitle { font-size: 1.15rem; color: var(--accent); font-weight: 700; margin-bottom: 1.25rem; line-height: 1.5; max-width: 800px; margin-left: auto; margin-right: auto; position: relative; }
+        .hero p.desc { font-size: 0.98rem; color: var(--text-muted); max-width: 720px; margin: 0 auto 1.75rem auto; line-height: 1.65; position: relative; }
+
+        .trust-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-bottom: 2rem; position: relative; }
+        .trust-pill { background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); border-radius: 20px; padding: 0.4rem 0.9rem; font-size: 0.8rem; color: var(--text-main); font-weight: 600; }
+        .trust-pill span { margin-right: 0.3rem; }
+
+        /* ---- Cadeaux ---- */
+        .gifts-preview { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2.25rem; text-align: left; position: relative; }
+        .gift-card { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); padding: 1.1rem; border-radius: 14px; display: flex; align-items: center; gap: 1rem; transition: border-color 0.2s ease, transform 0.2s ease; opacity: 0; animation: riseIn 0.6s ease forwards; }
+        .gift-card:nth-child(2) { animation-delay: 0.12s; }
+        .gift-card:nth-child(3) { animation-delay: 0.24s; }
+        .gift-card:hover { border-color: rgba(34,211,168,0.4); transform: translateY(-2px); }
+        .gift-icon { font-size: 1.9rem; background: var(--accent-soft); padding: 0.55rem; border-radius: 12px; transition: transform 0.25s ease; }
+        .gift-card:hover .gift-icon { transform: scale(1.15) rotate(-6deg); }
+        .gift-info h4 { font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.2rem; }
+        .gift-info p { font-size: 0.8rem; color: var(--accent); font-weight: 600; }
+
+        /* ---- Mascotte ---- */
+        .mascot-banner { background: linear-gradient(135deg, rgba(34, 211, 168, 0.10), rgba(19, 31, 56, 0.9)); border: 1px solid rgba(34, 211, 168, 0.28); border-radius: 18px; padding: 1.5rem; margin-bottom: 2.5rem; display: flex; align-items: flex-start; gap: 1.25rem; flex-wrap: wrap; position: relative; text-align: left; }
+        .mascot-avatar { font-size: 2.6rem; background: var(--primary-soft); width: 68px; height: 68px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; animation: bounce 2.4s infinite; border: 1px solid rgba(34,211,168,0.3); cursor: pointer; transition: transform 0.3s ease; }
+        .mascot-avatar:hover { transform: rotate(-12deg) scale(1.1); animation: none; }
+        .mascot-content { flex: 1; min-width: 240px; position: relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(34,211,168,0.18); border-radius: 14px; padding: 1rem 1.1rem; }
+        .mascot-content::before { content: ""; position: absolute; left: -9px; top: 26px; width: 16px; height: 16px; background: #14213b; border-left: 1px solid rgba(34,211,168,0.18); border-bottom: 1px solid rgba(34,211,168,0.18); transform: rotate(45deg); }
+        .mascot-content h3 { font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.5rem; }
+        .steps { list-style: none; display: grid; gap: 0.5rem; }
+        .steps li { display: flex; gap: 0.7rem; align-items: flex-start; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+        .step-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #06251d; font-weight: 800; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; margin-top: 2px; font-family: var(--font-display); }
+        .steps strong { color: var(--text-main); }
+        .warn { margin-top: 0.75rem; font-size: 0.82rem; color: var(--accent); font-style: italic; }
+
+        /* ---- Horloge ---- */
+        .central-clock-container { background: linear-gradient(165deg, var(--card-bg-2), var(--card-bg)); border: 1px solid rgba(34,211,168,0.5); border-radius: 18px; padding: 1.5rem; text-align: center; margin-bottom: 2rem; animation: glow 3s infinite ease-in-out; }
+        .central-clock-title { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.6rem; }
+        .central-clock-display { font-size: 2.4rem; font-weight: 800; color: var(--accent); letter-spacing: 0.04em; font-variant-numeric: tabular-nums; font-family: var(--font-display); }
+
+        /* ---- Vagues ---- */
+        .waves-container { margin-bottom: 3rem; }
+        .section-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; letter-spacing: -0.01em; flex-wrap: wrap; }
+        .waves-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; margin-bottom: 1.25rem; }
+
+        .wave-card { background: linear-gradient(165deg, var(--card-bg-2), var(--card-bg)); border: 1px solid var(--border-color); border-radius: 18px; padding: 1.6rem; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.25s ease, box-shadow 0.25s ease; position: relative; overflow: hidden; opacity: 0; animation: riseIn 0.6s ease forwards; }
+        .wave-card:nth-child(2) { animation-delay: 0.12s; }
+        .wave-card:hover { transform: translateY(-4px); box-shadow: 0 16px 30px -10px rgba(0,0,0,0.5); }
+        .wave-card.active { border-color: var(--primary); box-shadow: 0 0 0 1px rgba(34, 211, 168, 0.15), 0 20px 40px -15px rgba(34,211,168,0.2); }
+        .wave-card.active::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, var(--primary), var(--accent)); }
+        .wave-card.locked { opacity: 0; border-style: dashed; }
+        .wave-card.locked:hover { opacity: 0.85; }
+
+        .wave-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 0.5rem; }
+        .wave-title { font-weight: 700; font-size: 1.1rem; color: var(--text-main); white-space: nowrap; }
+        .wave-time { font-size: 1.35rem; font-weight: 800; color: var(--primary); margin-bottom: 0.4rem; font-family: var(--font-display); letter-spacing: -0.01em; }
+        .wave-countdown { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+        .wave-countdown strong { color: var(--accent); font-family: var(--font-display); font-variant-numeric: tabular-nums; }
+        .wave-reward { font-size: 0.85rem; color: var(--accent); font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.35rem; }
+
+        .wave-status { font-size: 0.72rem; padding: 0.3rem 0.6rem; border-radius: 20px; font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.03em; display: inline-flex; align-items: center; }
+        .status-open { background: var(--primary-soft); color: var(--primary); }
+        .status-locked { background: rgba(255, 107, 107, 0.15); color: var(--danger); }
+        .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff4d4d; margin-right: 0.4rem; animation: ping 1.4s infinite; }
+
+        .wave-capacity { font-size: 0.85rem; color: var(--text-muted); margin: 1rem 0 0.6rem; display: flex; justify-content: space-between; }
+        .capacity-bar { height: 8px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; margin-bottom: 1.1rem; }
+        .capacity-fill { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--primary), var(--accent)); animation: fillUp 1.4s cubic-bezier(.2,.8,.2,1) 0.4s forwards; }
+
+        .wave-btn { width: 100%; background: var(--primary-soft); color: var(--primary); border: 1px solid rgba(34, 211, 168, 0.3); padding: 0.75rem; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; text-align: center; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+        .wave-btn:hover { background: var(--primary); color: #06251d; transform: translateY(-1px); }
+        .wave-btn.disabled { background: rgba(255,255,255,0.03); color: var(--text-muted); border-color: var(--border-color); cursor: not-allowed; }
+        .wave-btn.disabled:hover { transform: none; }
+
+        .wave-info-bubble { background: var(--primary-soft); border: 1px solid rgba(34, 211, 168, 0.2); border-radius: 12px; padding: 0.9rem 1.25rem; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.75rem; }
+        .wave-info-bubble span { color: var(--primary); font-size: 1.15rem; }
+
+        /* ---- Comment on gagne ---- */
+        .howto { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem; }
+        .howto-card { background: linear-gradient(165deg, var(--card-bg-2), var(--card-bg)); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem; text-align: left; }
+        .howto-card .big { font-size: 1.8rem; font-weight: 800; font-family: var(--font-display); color: var(--primary); margin-bottom: 0.2rem; }
+        .howto-card h4 { font-size: 0.95rem; margin-bottom: 0.35rem; }
+        .howto-card p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+
+        /* ---- Gagnants (démo) ---- */
+        .winners-section { margin-top: 3rem; }
+        .winners-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+        .winner-card { background: linear-gradient(165deg, var(--card-bg-2), var(--card-bg)); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.15rem; display: flex; align-items: center; gap: 0.9rem; }
+        .winner-avatar { font-size: 1.6rem; background: var(--accent-soft); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .winner-info h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.15rem; }
+        .winner-info p { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+        .winner-gift { font-size: 0.78rem; font-weight: 700; color: var(--primary); }
+        .winners-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem; text-align: center; }
+        .winners-note a { color: var(--primary); cursor: pointer; }
+
+        /* ---- Alerte ---- */
+        .alert-box { background: linear-gradient(135deg, rgba(255, 184, 77, 0.09), rgba(19, 31, 56, 0.9)); border: 1px solid rgba(255, 184, 77, 0.28); border-radius: 20px; padding: 2.25rem 1.75rem; margin-top: 3rem; text-align: center; }
+        .alert-box h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+        .alert-box p { font-size: 0.92rem; color: var(--text-muted); max-width: 650px; margin: 0 auto 1.5rem auto; line-height: 1.55; }
+        .alert-form { display: flex; gap: 0.75rem; max-width: 700px; margin: 0 auto; flex-wrap: wrap; justify-content: center; align-items: center; }
+        .alert-form input, .alert-form select { flex: 1; min-width: 220px; padding: 0.85rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.95rem; min-height: 44px; transition: border-color 0.2s ease; }
+        .alert-form input:focus, .alert-form select:focus { outline: none; border-color: var(--primary); }
+        .alert-form select { cursor: pointer; }
+        .alert-form button { background: linear-gradient(135deg, var(--accent), #f5a030); color: #2a1a02; font-weight: 800; padding: 0.85rem 1.6rem; border: none; border-radius: 10px; cursor: pointer; min-height: 44px; transition: transform 0.15s ease; white-space: nowrap; }
+        .alert-form button:hover { transform: translateY(-2px); }
+
+        /* ---- Features ---- */
+        .features-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem; margin-top: 2rem; }
+        .feature-card { background: linear-gradient(165deg, var(--card-bg-2), var(--card-bg)); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.35rem; display: flex; align-items: center; gap: 1rem; transition: transform 0.2s ease; opacity: 0; animation: riseIn 0.6s ease forwards; }
+        .feature-card:nth-child(2) { animation-delay: 0.1s; }
+        .feature-card:nth-child(3) { animation-delay: 0.2s; }
+        .feature-card:nth-child(4) { animation-delay: 0.3s; }
+        .feature-card:hover { transform: translateY(-3px); }
+        .feature-icon { font-size: 1.5rem; background: rgba(255,255,255,0.05); padding: 0.8rem; border-radius: 12px; }
+        .feature-text h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .feature-text p { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* ---- Pro ---- */
+        .pro-section { background: linear-gradient(135deg, rgba(22, 33, 62, 0.85), rgba(11, 18, 32, 0.95)); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.25rem 1.75rem; margin-top: 3rem; text-align: center; }
+        .pro-section h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .pro-section p { font-size: 0.92rem; color: var(--text-muted); max-width: 700px; margin: 0 auto 1.6rem auto; line-height: 1.55; }
+        .pro-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-bottom: 1.6rem; }
+        .pro-stat { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.9rem 1.2rem; min-width: 150px; }
+        .pro-stat strong { display: block; font-size: 1.4rem; font-family: var(--font-display); color: var(--primary); }
+        .pro-stat span { font-size: 0.78rem; color: var(--text-muted); }
+        .pro-btn { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 0.75rem 1.6rem; border-radius: 10px; font-weight: 700; text-decoration: none; transition: all 0.2s ease; font-size: 0.9rem; min-height: 44px; }
+        .pro-btn:hover { background: var(--primary); color: #06251d; transform: translateY(-2px); }
+
+        .bot-detector { display: none !important; }
+
+        /* ---- Modals ---- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(6, 10, 20, 0.75); backdrop-filter: blur(6px); justify-content: center; align-items: center; z-index: 1000; padding: 1rem; }
+        .modal { background: linear-gradient(165deg, var(--card-bg-2), var(--card-bg)); border: 1px solid var(--border-color); padding: 2.25rem 1.75rem; border-radius: 20px; max-width: 500px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); position: relative; max-height: 90vh; overflow-y: auto; animation: fadeIn 0.25s ease; }
+        .modal h3 { margin-bottom: 1rem; color: var(--text-main); font-size: 1.4rem; display: flex; align-items: center; gap: 0.5rem; }
+        .modal p, .modal li { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.6; }
+        .modal ul { margin-left: 1.25rem; margin-bottom: 1rem; }
+        .modal label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; }
+        .modal input { width: 100%; padding: 0.85rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; margin-bottom: 1rem; font-size: 1rem; min-height: 44px; transition: border-color 0.2s ease; }
+        .modal input:focus { outline: none; border-color: var(--primary); }
+        .modal button.submit-btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #06251d; font-weight: 800; padding: 0.85rem; border: none; border-radius: 10px; cursor: pointer; font-size: 1rem; min-height: 44px; transition: transform 0.15s ease; }
+        .modal button.submit-btn:hover { transform: translateY(-2px); }
+        .modal button.submit-btn.accent { background: linear-gradient(135deg, var(--accent), #f5a030); color: #2a1a02; }
+        .modal button.submit-btn.ghost { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); margin-top: 0.6rem; }
+        .close-modal { position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.05); border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s ease; }
+        .close-modal:hover { background: rgba(255,255,255,0.1); color: var(--text-main); }
+        .modal-box { background: var(--bg-dark); border: 1px solid var(--border-color); padding: 1.1rem; border-radius: 14px; margin: 1rem 0; }
+        .modal-box.highlight { border-color: var(--primary); box-shadow: 0 0 18px rgba(34, 211, 168, 0.2); }
+        .error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 0.75rem; text-align: center; display: none; }
+        .stepper { display: flex; gap: 0.4rem; justify-content: center; margin-bottom: 1.25rem; }
+        .stepper i { width: 28px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.08); }
+        .stepper i.on { background: var(--primary); }
+        .confetti { position: absolute; top: -10px; width: 8px; height: 14px; border-radius: 2px; opacity: 0.9; animation: confettiFall 2.6s ease-in forwards; pointer-events: none; }
+
+        /* ---- Bêta lock ---- */
+        .beta-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); background-image: radial-gradient(circle at 50% 30%, rgba(34,211,168,0.10), transparent 55%); display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 1rem; }
+        .beta-box { background: linear-gradient(165deg, var(--card-bg-2), var(--card-bg)); border: 1px solid var(--border-color); padding: 2.5rem 1.75rem; border-radius: 20px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); }
+        .beta-box input { width: 100%; padding: 0.85rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; margin-bottom: 1rem; font-size: 1rem; text-align: center; letter-spacing: 2px; min-height: 44px; }
+        .beta-box button { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #06251d; font-weight: 800; padding: 0.85rem; border: none; border-radius: 10px; cursor: pointer; font-size: 1rem; min-height: 44px; }
+
+        /* ---- Footer ---- */
+        footer { border-top: 1px solid var(--border-color); margin-top: 4rem; padding-top: 2.25rem; padding-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; max-width: 1180px; width: 100%; margin-left: auto; margin-right: auto; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2rem; margin-bottom: 2rem; }
+        .footer-col h5 { color: var(--text-main); font-size: 1rem; margin-bottom: 0.85rem; font-weight: 700; }
+        .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
+        .footer-col ul li a { color: var(--text-muted); text-decoration: none; transition: color 0.2s ease; cursor: pointer; }
+        .footer-col ul li a:hover { color: var(--primary); }
+        .footer-bottom { text-align: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1.5rem; font-size: 0.85rem; }
+
+        @media (max-width: 640px) {
+            .hero h1 { font-size: 2rem; }
+            .hero { padding: 2.25rem 1.25rem; }
+            .central-clock-display { font-size: 1.9rem; }
+            .mascot-content::before { display: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+            .gift-card, .wave-card, .feature-card { opacity: 1; }
+            .wave-card.locked { opacity: 0.75; }
+            .capacity-fill { width: var(--fill, 0%); }
+            .hero h1 { color: var(--text-main); background: none; }
+        }
+    </style>
+</head></head>
+<body>
+    <div id="scrollBar"></div>
+
+    <!-- ÉCRAN DE VERROUILLAGE : PHASE DE TEST -->
+    <div class="beta-overlay" id="betaModal">
+        <div class="beta-box">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">🦎🔒</div>
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.4rem;">Prototype en phase de test</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;"><strong>Pas-de-Lézard</strong> n'est pas encore lancé. Cette version sert uniquement à tester le parcours : aucune vague réelle, aucun lot réel, aucune donnée transmise.</p>
+            <form onsubmit="handleBetaAccess(event)">
+                <input type="password" id="betaPassword" placeholder="Code d'accès testeur" required>
+                <button type="submit">Entrer sur le prototype</button>
+            </form>
+            <p id="betaError" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.75rem; display: none;">Code incorrect.</p>
+        </div>
+    </div>
+
+    <div class="main-content" id="siteContent" style="display: none;">
+
+        <div class="test-banner" id="apiStatus" style="display:none; border-color: rgba(255,107,107,.5); color: var(--danger); background: rgba(255,107,107,.08);">⚠️ Serveur injoignable — lancez le back-end (npm start) pour que la page se remplisse.</div>
+        <div class="test-banner">🧪 PROTOTYPE — Phase de test. Les chiffres, gagnants et messages affichés sont des données de démonstration.</div>
+
+        <!-- Navbar -->
+        <nav>
+            <a href="#" class="logo">
+                <div class="logo-icon">🦎</div>
+                <span>PAS-DE-LÉZARD</span>
+            </a>
+            <div class="badge-gratuit">100% GRATUIT • ZÉRO TIRAGE À L'AVEUGLE</div>
+            <button class="btn-inscrire" onclick="openModal()">Jouer gratuitement</button>
+        </nav>
+
+        <!-- Ticker -->
+        <div class="live-ticker">
+            <span class="live-badge">Live vague 1</span>
+            <span class="live-stream-text" id="tickerText">⚡ <strong>Alex_92</strong> résout les 2 énigmes en 01:42.312 — 1ère position provisoire !</span>
+            <span class="demo-tag" id="tickerDemo">Démo</span>
+        </div>
+
+        <!-- Hero -->
+        <div class="hero">
+            <h1>Ici, on ne gagne pas par chance.</h1>
+            <p class="subtitle">Zéro tirage à l'aveugle. Tu observes, tu réfléchis, tu réponds. Les plus rapides repartent avec un lot.</p>
+            <p class="desc">100 % gratuit, sans obligation d'achat et <strong>sans numéro de téléphone pour jouer</strong>. Chaque vague réunit 500 joueurs autour de <strong>2 énigmes visuelles</strong> cachées dans une boutique partenaire. Résous-les sous le temps limite pour te qualifier : <strong>1 qualifié sur 10 remporte un lot</strong>.</p>
+
+            <div class="trust-row">
+                <div class="trust-pill"><span>📵</span>Aucun téléphone pour jouer</div>
+                <div class="trust-pill"><span>💳</span>Aucune carte bancaire</div>
+                <div class="trust-pill"><span>⏱️</span>Classement certifié à la ms</div>
+                <div class="trust-pill"><span>📜</span>Règlement public</div>
+            </div>
+
+            <div class="gifts-preview">
+                <div class="gift-card">
+                    <div class="gift-icon">💳</div>
+                    <div class="gift-info"><h4>Bons d'achat</h4><p>Grandes enseignes</p></div>
+                </div>
+                <div class="gift-card">
+                    <div class="gift-icon">💻</div>
+                    <div class="gift-info"><h4>High-tech & équipement</h4><p>Matériel de valeur</p></div>
+                </div>
+                <div class="gift-card">
+                    <div class="gift-icon">🎁</div>
+                    <div class="gift-info"><h4>Cadeaux partenaires</h4><p>Offerts par la boutique du jour</p></div>
+                </div>
+            </div>
+
+            <!-- Mascotte -->
+            <div class="mascot-banner">
+                <div class="mascot-avatar" id="mascot" title="Clique-moi !">🦎</div>
+                <div class="mascot-content">
+                    <h3>Salut, c'est Lézard le Guide. Voilà comment ça marche :</h3>
+                    <ul class="steps">
+                        <li><span class="step-num">1</span><div><strong>Tu choisis un pseudo et tu entres.</strong> Aucun téléphone, aucune carte, aucun compte à créer.</div></li>
+                        <li><span class="step-num">2</span><div><strong>Tu rejoins la salle d'attente</strong> et tu explores la boutique partenaire : c'est là que se cachent les détails à repérer.</div></li>
+                        <li><span class="step-num">3</span><div><strong>À l'heure pile, la porte s'ouvre</strong> et les 2 énigmes tombent en même temps pour tout le monde.</div></li>
+                        <li><span class="step-num">4</span><div><strong>Tu réponds sous le temps limite → tu es qualifié.</strong> Les lots sont attribués parmi les qualifiés. Ton numéro n'est demandé qu'<strong>en cas de gain</strong>, pour t'envoyer ton lot.</div></li>
+                    </ul>
+                    <p class="warn">⚠️ Bots et scripts = radiation immédiate et perte du lot. Ici, seul ton talent compte.</p>
+                </div>
+            </div>
+
+            <button class="btn-inscrire" id="heroBtn" style="padding: 0.9rem 2.75rem; font-size: 1.05rem; margin: 0 auto;" onclick="openModal()">Jouer gratuitement — <span id="heroPlaces">--</span> places restantes</button>
+        </div>
+
+        <!-- Horloge & vagues -->
+        <div class="waves-container">
+            <div class="central-clock-container">
+                <div class="central-clock-title">🕒 Horloge réseau certifiée (précision milliseconde)</div>
+                <div class="central-clock-display" id="realTimeClock">--:--:--.---</div>
+            </div>
+
+            <div class="section-title"><span>⏱️</span> Vagues du jour <span class="demo-tag">Démo</span></div>
+            <div class="waves-grid">
+                <div class="wave-card active">
+                    <div class="wave-header">
+                        <span class="wave-title" id="waveTitle">Vague 1</span>
+                        <span class="wave-status status-open" id="waveStatus"><span class="live-dot"></span>Ouverte</span>
+                    </div>
+                    <div class="wave-time" id="waveTime">--:-- – --:--</div>
+                    <div class="wave-countdown">⏳ Top départ dans <strong id="waveCountdown">--:--:--</strong></div>
+                    <div class="wave-reward" id="waveReward">🏆 10 lots parmi les qualifiés</div>
+                    <div class="wave-capacity"><span>Places restantes</span><span><strong><span id="wavePlaces">--</span> / 500</strong></span></div>
+                    <div class="capacity-bar"><div class="capacity-fill" id="waveFill" style="--fill: 0%;"></div></div>
+                    <div class="wave-capacity" style="margin-top:0"><span>Déjà qualifiés</span><span><strong id="waveQualified">0</strong></span></div>
+                    <button class="wave-btn" id="waveBtn" onclick="openModal()">Entrer dans la salle d'attente</button>
+                </div>
+
+                <div class="wave-card locked" id="wave2Card">
+                    <div class="wave-header">
+                        <span class="wave-title">Vague 2</span>
+                        <span class="wave-status status-locked">Bientôt</span>
+                    </div>
+                    <div class="wave-time" id="wave2Time">--:-- – --:--</div>
+                    <div class="wave-countdown">🚪 Salle d'attente ouverte à <strong id="wave2Open">--:--</strong></div>
+                    <div class="wave-reward" id="wave2Reward">🏆 10 lots parmi les qualifiés</div>
+                    <div class="wave-capacity"><span>Places</span><span><strong>500</strong></span></div>
+                    <div class="capacity-bar"><div class="capacity-fill" style="--fill: 0%;"></div></div>
+                    <button class="wave-btn disabled">Verrouillée</button>
+                </div>
+            </div>
+
+            <div class="wave-info-bubble">
+                <span>💡</span>
+                <div><strong>Pourquoi la qualification ?</strong> Le chrono à la milliseconde reste affiché et départage les égalités, mais il ne sert plus de critère unique : ta connexion 4G ne doit pas décider à ta place. Résous sous le temps limite et tu as tes chances, comme tout le monde.</div>
+            </div>
+
+            <div class="section-title" style="margin-top: 2.5rem;"><span>🎯</span> Comment on gagne, concrètement</div>
+            <div class="howto">
+                <div class="howto-card"><div class="big">500</div><h4>joueurs par vague</h4><p>Tout le monde reçoit les 2 énigmes à la même seconde, puis part les chercher dans la boutique partenaire.</p></div>
+                <div class="howto-card"><div class="big">5 min</div><h4>pour se qualifier</h4><p>Une fenêtre large : le temps de fouiller la boutique partenaire et de trouver les 2 détails. Réponds juste dans ce délai et tu es qualifié.</p></div>
+                <div class="howto-card"><div class="big">1 / 10</div><h4>qualifié gagne un lot</h4><p>10 lots sont attribués parmi les qualifiés, sous contrôle du règlement. Le chrono départage les égalités.</p></div>
+            </div>
+        </div>
+
+        <!-- Gagnants (démo) -->
+        <div class="winners-section">
+            <div class="section-title"><span>🏆</span> Derniers gagnants <span class="demo-tag" id="winnersDemo">Données de démonstration</span></div>
+            <div class="winners-grid" id="winnersGrid">
+                <div class="winner-card">
+                    <div class="winner-avatar">🥇</div>
+                    <div class="winner-info"><h4>Alex_92</h4><p>Vague test · 01:42.312</p><span class="winner-gift">💳 Bon d'achat 25 €</span></div>
+                </div>
+                <div class="winner-card">
+                    <div class="winner-avatar">🥈</div>
+                    <div class="winner-info"><h4>Sarah_Btx</h4><p>Vague test · 01:48.845</p><span class="winner-gift">🎁 Coffret partenaire</span></div>
+                </div>
+                <div class="winner-card">
+                    <div class="winner-avatar">🥉</div>
+                    <div class="winner-info"><h4>Lucas_75</h4><p>Vague test · 02:15.092</p><span class="winner-gift">🛍️ Bon partenaire 20 €</span></div>
+                </div>
+            </div>
+            <p class="winners-note" id="winnersNote">Cette section affichera les vrais gagnants dès la première vague officielle. Règlement complet dans les <a onclick="openLegalModal('cgu')">CGU</a>.</p>
+        </div>
+
+        <!-- Alerte -->
+        <div class="alert-box">
+            <h3>🔔 Reçois l'alerte avant l'ouverture</h3>
+            <p>Laisse ton email et on te prévient 30 minutes avant le top départ de la prochaine vague. Ton horaire préféré nous aide à caler les lancements. <em>(Phase de test : rien n'est envoyé pour l'instant.)</em></p>
+            <form class="alert-form" onsubmit="handleAlertSub(event)">
+                <input type="email" id="alertEmail" placeholder="Votre adresse email" required>
+                <select id="alertTime" required>
+                    <option value="" disabled selected>Tes horaires favoris ?</option>
+                    <option value="matin">Le matin (8h – 12h)</option>
+                    <option value="midi">Le midi (12h – 14h)</option>
+                    <option value="apresmidi">L'après-midi (14h – 18h)</option>
+                    <option value="soir">Le soir (18h – 22h)</option>
+                    <option value="nuit">Les oiseaux de nuit (après 22h)</option>
+                </select>
+                <button type="submit">M'alerter</button>
+            </form>
+            <p id="alertSuccessMsg" style="color: var(--primary); font-size: 0.85rem; margin-top: 0.75rem; display: none;">✅ C'est noté ! Tu seras prévenu et on prend en compte tes horaires.</p>
+        </div>
+
+        <!-- Features -->
+        <div class="features-bar">
+            <div class="feature-card">
+                <div class="feature-icon">📵</div>
+                <div class="feature-text"><h4>Aucun numéro pour jouer</h4><p>Pas de téléphone, pas d'engagement, pas de carte. Ton numéro n'est demandé qu'en cas de gain.</p></div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-text"><h4>Chrono certifié</h4><p>Horodatage serveur à la milliseconde, identique pour tous les joueurs.</p></div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <div class="feature-text"><h4>Tolérance zéro anti-bot</h4><p>Tout script ou automatisation entraîne une radiation immédiate.</p></div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <div class="feature-text"><h4>Reprise instantanée</h4><p>Page fermée, batterie à plat, coupure réseau : ta session et ton pseudo sont conservés.</p></div>
+            </div>
+        </div>
+
+        <!-- Pro -->
+        <div class="pro-section">
+            <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">🤝</span>
+            <h3>Commerçant, marque, e-boutique ?</h3>
+            <p>Chaque vague envoie 500 joueurs explorer votre boutique <strong>en détail</strong> pendant plusieurs minutes, à la recherche de 2 indices visuels. Ce n'est pas une impression publicitaire : c'est une visite attentive, mesurable, et un lot offert par vous qui devient l'objet de l'attention.</p>
+            <div class="pro-stats">
+                <div class="pro-stat"><strong>500</strong><span>visiteurs par vague</span></div>
+                <div class="pro-stat"><strong>[à mesurer]</strong><span>temps moyen sur votre boutique</span></div>
+                <div class="pro-stat"><strong>[à mesurer]</strong><span>taux de conversion constaté</span></div>
+            </div>
+            <a href="mailto:partenaires@pas-de-lezard.fr" class="pro-btn">Devenir partenaire pilote</a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer id="siteFooter" style="display: none;">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h5>Pas-de-Lézard !</h5>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Le jeu gratuit où l'observation et la rapidité remplacent la loterie. Prototype en phase de test.</p>
+            </div>
+            <div class="footer-col">
+                <h5>Support & contact</h5>
+                <ul>
+                    <li><a href="mailto:contact@pas-de-lezard.fr">Nous contacter par email</a></li>
+                    <li><a onclick="openLegalModal('faq')">Foire aux questions</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Informations légales</h5>
+                <ul>
+                    <li><a onclick="openLegalModal('mentions')">Mentions légales</a></li>
+                    <li><a onclick="openLegalModal('cgu')">Règlement officiel & CGU</a></li>
+                    <li><a onclick="openLegalModal('confidentialite')">Politique de confidentialité</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Pas-de-Lézard — Fait avec 🦎 et ❤️ en France. Zéro arnaque, 100% plaisir.</p>
+        </div>
+    </footer>
+
+    <!-- MODALE DE JEU -->
+    <!-- MODALE DE JEU (pilotée par l'API) -->
+    <div class="modal-overlay" id="gameModal">
+        <div class="modal">
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+            <div class="stepper" id="stepper"><i class="on"></i><i></i><i></i><i></i></div>
+
+            <!-- ÉTAPE 1 : pseudo + captcha serveur -->
+            <div id="step1">
+                <h3>🦎 Choisis ton pseudo</h3>
+                <p>C'est tout ce qu'il faut pour entrer. <strong>Aucun téléphone, aucun email.</strong> Inscriptions ouvertes dès 1 h avant le départ, jusqu'à 1 minute avant.</p>
+                <p id="joinNotice" style="display: none; color: var(--accent); font-weight: 600;"></p>
+                <form id="joinForm" onsubmit="handleStep1(event)">
+                    <label>Ton pseudo (visible au classement)</label>
+                    <input type="text" id="userPseudo" placeholder="ex: LeZardMalin75" required minlength="3" maxlength="20" autocomplete="off">
+                    <input type="text" name="website_url_check" id="botField" class="bot-detector" autocomplete="off" tabindex="-1">
+                    <label>Vérification anti-robot : combien font <span id="captchaQ">…</span> ?</label>
+                    <input type="number" id="humanCaptcha" placeholder="ta réponse" required style="text-align: center;">
+                    <div style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 1rem; text-align: left;">
+                        <input type="checkbox" id="acceptCgu" required style="width: 20px; height: 20px; margin-top: 2px; accent-color: var(--primary); cursor: pointer; margin-bottom: 0;">
+                        <label for="acceptCgu" style="font-size: 0.8rem; line-height: 1.4; cursor: pointer; margin: 0;">J'ai lu et j'accepte le <a href="#" onclick="openLegalModal('cgu'); return false;" style="color: var(--primary);">Règlement officiel et les CGU</a>.</label>
+                    </div>
+                    <button type="submit" class="submit-btn">Entrer dans la salle d'attente</button>
+                </form>
+                <p id="botErrorMsg" class="error-msg"></p>
+            </div>
+
+            <!-- ÉTAPE 2 : salle d'attente -->
+            <div id="step2" style="display: none; text-align: center;">
+                <div style="font-size: 3.5rem; margin-bottom: 0.5rem; animation: pulse 2s infinite;">🚪🔒</div>
+                <h3 style="justify-content: center; color: var(--primary);">Salle d'attente</h3>
+                <p>Place réservée pour <strong id="waitingPseudo" style="color: var(--primary);"></strong> · Code joueur <strong id="generatedPlayerCode" style="color: var(--accent);">PL-0000</strong></p>
+                <p style="font-size: 0.8rem; margin-top: -0.5rem;">Garde ce code : il te sera demandé pour valider tes réponses.</p>
+                <div class="modal-box" style="text-align: left;">
+                    <span style="font-size: 0.8rem; color: var(--accent); display: block; margin-bottom: 0.3rem; font-weight: bold; text-align: center;">💡 CONSEIL DU LÉZARD GUIDE</span>
+                    <p style="font-size: 0.85rem; margin-bottom: 0.75rem; text-align: center;">Va explorer la boutique <strong id="partnerName"></strong> dès maintenant. Les 2 énigmes porteront sur des détails visibles dans ses rayons : plus tu la connais, plus tu iras vite.</p>
+                    <a id="shopLink" href="#" target="_blank" rel="noopener" style="display: block; background: var(--primary-soft); border: 1px solid var(--primary); padding: 0.8rem; border-radius: 10px; color: var(--primary); text-decoration: none; font-weight: bold; text-align: center;">🛍️ Visiter la boutique partenaire ↗</a>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Il est</span>
+                    <div style="font-size: 1.25rem; font-weight: bold; color: var(--accent); font-family: var(--font-display);" id="waitingClock">--:--:--</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem;">Ouverture de la porte dans <strong id="waitingCountdown" style="color: var(--primary);">--:--:--</strong></div>
+                </div>
+                <button type="button" class="submit-btn ghost" id="devStartBtn" style="display:none" onclick="devStartNow()">Ouvrir la porte maintenant (test)</button>
+                <button type="button" class="submit-btn ghost" onclick="leaveWaitingRoom()">Quitter la salle d'attente</button>
+            </div>
+
+            <!-- ÉTAPE 3 : énigmes (tirées côté serveur) -->
+            <div id="step3" style="display: none;">
+                <div style="text-align: center; margin-bottom: 0.5rem; font-size: 2.5rem;">🚪🔓✨</div>
+                <h3 style="justify-content: center; color: var(--primary);">La porte est ouverte !</h3>
+                <p style="text-align: center; font-size: 0.85rem;">Va chercher les 2 réponses dans la boutique, puis valide. Temps restant : <strong id="qualTimer" style="color: var(--accent); font-family: var(--font-display);">5:00</strong> · Tentatives restantes : <strong id="attemptsLeft">3</strong></p>
+                <div id="puzzleList"></div>
+                <a id="shopLinkGame" href="#" target="_blank" rel="noopener" style="display:block; text-align:center; font-size:0.8rem; color: var(--primary); margin:-0.5rem 0 1rem;">🛍️ Ouvrir la boutique partenaire ↗</a>
+                <form id="answerForm" onsubmit="handleGameSubmit(event)">
+                    <label>Ton code joueur (PL-XXXX)</label>
+                    <input type="text" id="codeInput" placeholder="ex: PL-9482" required style="text-align: center; text-transform: uppercase;" autocomplete="off">
+                    <button type="submit" class="submit-btn">Valider mes réponses</button>
+                </form>
+                <p id="gameErrorMsg" class="error-msg"></p>
+            </div>
+
+            <!-- ÉTAPE 4 : résultat -->
+            <div id="step4" style="display: none; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;" id="resultEmoji">🏆</div>
+                <h3 style="justify-content: center; color: var(--primary);" id="resultTitle">Résultat</h3>
+                <p id="resultText"></p>
+                <div class="modal-box">
+                    <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">TON CHRONO CERTIFIÉ (HORODATAGE SERVEUR)</span>
+                    <strong id="finalChrono" style="font-size: 1.6rem; color: var(--accent); font-family: var(--font-display);">--:--.---</strong>
+                    <span id="resultRank" style="font-size: 0.8rem; color: var(--primary); display: block; margin-top: 0.4rem;"></span>
+                </div>
+                <div id="drawPending" style="display:none;"></div>
+                <div id="winBlock" style="display:none;">
+                    <p style="font-size: 0.85rem;">🎉 <strong>Tu fais partie des gagnants de cette vague.</strong> Pour recevoir ton lot, on a besoin d'un numéro de mobile — c'est la seule fois où on te le demande.</p>
+                    <button type="button" class="submit-btn accent" onclick="goToClaim()">Réclamer mon lot</button>
+                </div>
+                <p id="notWinner" style="display:none; font-size: 0.85rem; color: var(--text-muted);">Tu es bien qualifié, mais le tirage de cette vague n'est pas passé par toi. Retente la prochaine : tes chances augmentent à chaque vague.</p>
+                <p id="claimedNote" style="display:none; font-size: 0.85rem; color: var(--primary);">✅ Lot déjà réclamé. Tu recevras les instructions de retrait par email.</p>
+                <button type="button" class="submit-btn ghost" onclick="closeModal()">Fermer</button>
+            </div>
+
+            <!-- ÉTAPE 5 : réclamation du lot (seul moment où un numéro est demandé) -->
+            <div id="step5" style="display: none;">
+                <h3>🎁 Réclamer mon lot</h3>
+                <p>Un code de vérification est envoyé par SMS <strong>gratuit et non surtaxé</strong>. Ton numéro sert uniquement à te remettre le lot, puis il est supprimé.</p>
+                <form id="claimForm1" onsubmit="handleClaimStep1(event)">
+                    <label>Numéro de mobile</label>
+                    <input type="tel" id="userPhone" placeholder="06 12 34 56 78" required autocomplete="off">
+                    <button type="submit" class="submit-btn">Recevoir le code SMS</button>
+                </form>
+                <form id="claimForm2" onsubmit="handleClaimStep2(event)" style="display: none;">
+                    <label>Code reçu au <strong id="displayPhone"></strong> <span id="devCode" style="color: var(--accent);"></span></label>
+                    <input type="text" id="smsCode" placeholder="1234" required maxlength="4" inputmode="numeric" style="text-align: center; letter-spacing: 3px;" autocomplete="off">
+                    <button type="submit" class="submit-btn">Confirmer</button>
+                </form>
+                <p id="claimErrorMsg" class="error-msg"></p>
+            </div>
+
+            <!-- ÉTAPE 6 : confirmation -->
+            <div id="step6" style="display: none; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">✅</div>
+                <h3 style="justify-content: center; color: var(--primary);">Lot réservé !</h3>
+                <p>Merci <strong id="claimPseudo" style="color: var(--primary);"></strong>. En version réelle, tu recevrais ici les instructions pour récupérer ton lot. En phase de test, rien n'est envoyé.</p>
+                <button type="button" class="submit-btn" onclick="closeModal()">Terminer le test</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE LÉGALE -->
+    <div class="modal-overlay" id="legalModal">
+        <div class="modal">
+            <button class="close-modal" onclick="closeLegalModal()">&times;</button>
+            <h3 id="legalTitle">Titre</h3>
+            <div id="legalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        /* =========================================================
+           FRONT v4 — piloté par l'API. Le navigateur n'a plus aucune
+           autorité : heure, places, énigmes, chrono, qualification et
+           tirage viennent du serveur.
+           ========================================================= */
+        const BETA_SECRET_CODE = "LEZARD2026";
+        const $ = id => document.getElementById(id);
+        const pad = (n, l = 2) => String(n).padStart(l, '0');
+        const hm = ts => { const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+        const fmtDuration = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${pad(s % 60)}`; };
+        const fmtCountdown = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`; };
+
+        let serverOffset = 0;                 // heure serveur − heure locale
+        const now = () => Date.now() + serverOffset;
+        let wave = null, nextWave = null, me = null, captcha = null;
+        let pollId = null, resultPollId = null, currentStep = 0;
+        const getToken = () => localStorage.getItem('lezard_token');
+
+        async function api(path, opts = {}) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (getToken()) headers.Authorization = 'Bearer ' + getToken();
+            const r = await fetch(path, { method: opts.method || (opts.body ? 'POST' : 'GET'), headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) { const e = new Error(data.error || ('http_' + r.status)); e.data = data; e.status = r.status; throw e; }
+            return data;
+        }
+
+        const ERRORS = {
+            registration_closed: "Les inscriptions ne sont pas ouvertes pour cette vague.",
+            captcha_failed: "Vérification anti-robot incorrecte. Réessaie.",
+            invalid_pseudo: "Pseudo invalide : 3 à 20 caractères, lettres, chiffres, _ ou -.",
+            pseudo_taken: "Ce pseudo est déjà pris sur cette vague.",
+            wave_full: "La vague est complète.",
+            too_many_from_ip: "Trop d'inscriptions depuis cette connexion.",
+            bot_detected: "Accès refusé : activité automatisée détectée.",
+            rate_limited: "Doucement ! Réessaie dans quelques secondes.",
+            window_closed: "La fenêtre de qualification est fermée.",
+            already_answered: "Tu as déjà validé ta réponse.",
+            no_attempts_left: "Plus aucune tentative disponible.",
+            bad_player_code: "Code joueur incorrect.",
+            invalid_token: "Session expirée. Recommence l'inscription.",
+            not_a_winner: "Seuls les gagnants peuvent réclamer un lot.",
+            invalid_phone: "Numéro de mobile français invalide.",
+            bad_code: "Code incorrect.",
+            code_expired: "Code expiré. Redemande un SMS.",
+            sms_failed: "Envoi du SMS impossible pour le moment.",
+            no_puzzles_configured: "Aucune énigme configurée pour ce partenaire."
+        };
+        const msg = e => "❌ " + (ERRORS[e.message] || "Erreur : " + e.message);
+        function showError(id, text) { const el = $(id); el.innerText = text; el.style.display = 'block'; }
+        function hideErrors() { document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none'); }
+
+        /* ---- Horloge & compte à rebours (heure serveur) ---- */
+        async function syncTime() {
+            try { const t0 = Date.now(); const { now: srv } = await api('/api/time'); serverOffset = srv - (t0 + Date.now()) / 2; } catch (_) {}
+        }
+        function tickClock() {
+            const d = new Date(now());
+            const hms = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            $('realTimeClock').innerText = `${hms}.${pad(d.getMilliseconds(), 3)}`;
+            $('waitingClock').innerText = `🕒 ${hms}`;
+            if (wave) {
+                const left = wave.start_at - now();
+                $('waveCountdown').innerText = left > 0 ? fmtCountdown(left) : 'en cours';
+                $('waitingCountdown').innerText = left > 0 ? fmtCountdown(left) : 'maintenant !';
+            }
+        }
+        setInterval(tickClock, 50);
+
+        /* ---- Vagues ---- */
+        function phaseLabel(p) {
+            return { upcoming: 'Bientôt', registration: 'Ouverte', locked: 'Départ imminent', running: 'En cours', finished: 'Terminée', drawn: 'Tirage effectué' }[p] || p;
+        }
+        function renderWaves() {
+            if (!wave) { $('waveTitle').innerText = 'Aucune vague programmée'; $('waveBtn').className = 'wave-btn disabled'; $('waveBtn').innerText = 'Revenez bientôt'; return; }
+            const p = wave.phase;
+            $('waveTitle').innerText = `Vague #${wave.id}`;
+            $('waveTime').innerText = `${hm(wave.start_at)} – ${hm(wave.end_at)}`;
+            $('waveStatus').className = 'wave-status ' + (p === 'registration' || p === 'running' ? 'status-open' : 'status-locked');
+            $('waveStatus').innerHTML = (p === 'registration' || p === 'running' ? '<span class="live-dot"></span>' : '') + phaseLabel(p);
+            $('waveReward').innerText = `🏆 ${wave.prizes_count} lots parmi les qualifiés`;
+            $('wavePlaces').innerText = wave.places_left;
+            $('heroPlaces').innerText = wave.places_left;
+            $('waveFill').style.setProperty('--fill', ((wave.capacity - wave.places_left) / wave.capacity * 100).toFixed(1) + '%');
+            $('waveQualified').innerText = wave.qualified_count;
+            $('shopLink').href = wave.partner.shop_url;
+            $('partnerName').innerText = wave.partner.name;
+
+            const btn = $('waveBtn');
+            const labels = {
+                upcoming: [`Inscriptions à ${hm(wave.registration_open_at)}`, true],
+                registration: ['Entrer dans la salle d\'attente', false],
+                locked: ['Inscriptions closes — départ imminent', !getToken()],
+                running: [getToken() ? 'Rejoindre la partie en cours' : 'Vague en cours (inscriptions closes)', !getToken()],
+                finished: ['Vague terminée', !getToken()],
+                drawn: ['Tirage effectué', !getToken()]
+            };
+            const [label, disabled] = labels[p];
+            btn.innerText = label; btn.className = 'wave-btn' + (disabled ? ' disabled' : ''); btn.disabled = disabled;
+            $('heroBtn').innerHTML = p === 'registration' ? `Jouer gratuitement — <span id="heroPlaces">${wave.places_left}</span> places restantes` : 'Voir la vague';
+
+            if (nextWave) {
+                $('wave2Card').style.display = '';
+                $('wave2Time').innerText = `${hm(nextWave.start_at)} – ${hm(nextWave.end_at)}`;
+                $('wave2Open').innerText = hm(nextWave.registration_open_at);
+                $('wave2Reward').innerText = `🏆 ${nextWave.prizes_count} lots parmi les qualifiés`;
+            } else { $('wave2Card').style.display = 'none'; }
+        }
+        async function refreshWaves() {
+            try { const d = await api('/api/waves/current'); wave = d.current; nextWave = d.next; renderWaves(); }
+            catch (e) { $('apiStatus').style.display = 'block'; }
+        }
+
+        /* ---- Ticker & gagnants ---- */
+        const demoTicker = [
+            "🧪 Données de démonstration : le fil s'alimentera des vrais qualifiés dès la première vague.",
+            "🚪 La salle d'attente ouvre 1 h avant chaque départ.",
+            "📵 Aucun numéro de téléphone pour jouer : un pseudo suffit."
+        ];
+        let tickerMessages = demoTicker, tickerIndex = 0;
+        async function refreshTicker() {
+            if (!wave) return;
+            try {
+                const lb = await api(`/api/waves/${wave.id}/leaderboard`);
+                if (lb.entries.length) {
+                    tickerMessages = lb.entries.slice(0, 8).map(e => `⚡ <strong>${e.pseudo}</strong> se qualifie en ${e.chrono} (${e.rank}${e.rank === 1 ? 'er' : 'e'})`);
+                    $('tickerDemo').style.display = 'none';
+                }
+            } catch (_) {}
+        }
+        setInterval(() => {
+            const el = $('tickerText');
+            tickerIndex = (tickerIndex + 1) % tickerMessages.length;
+            el.classList.remove('slide'); void el.offsetWidth; el.innerHTML = tickerMessages[tickerIndex]; el.classList.add('slide');
+        }, 4000);
+        async function refreshWinners() {
+            try {
+                const d = await api('/api/winners/recent');
+                if (!d.winners.length) return;
+                const medals = ['🥇', '🥈', '🥉'];
+                $('winnersGrid').innerHTML = d.winners.slice(0, 6).map((w, i) => `
+                    <div class="winner-card"><div class="winner-avatar">${medals[i] || '🏅'}</div>
+                    <div class="winner-info"><h4>${w.pseudo}</h4><p>Vague #${d.wave.id} · ${w.chrono}</p><span class="winner-gift">🎁 Lot partenaire</span></div></div>`).join('');
+                $('winnersDemo').style.display = 'none';
+                $('winnersNote').innerText = `Gagnants de la vague #${d.wave.id} (${d.wave.draw_mode === 'random' ? 'tirés au sort parmi les qualifiés' : 'les plus rapides'}).`;
+            } catch (_) {}
+        }
+
+        /* ---- Accès prototype ---- */
+        function handleBetaAccess(e) {
+            e.preventDefault();
+            if ($('betaPassword').value === BETA_SECRET_CODE) {
+                $('betaModal').style.display = 'none'; $('siteContent').style.display = 'block'; $('siteFooter').style.display = 'block';
+            } else { $('betaError').style.display = 'block'; }
+        }
+        function handleAlertSub(e) {
+            e.preventDefault();
+            if ($('alertEmail').value && $('alertTime').value) { $('alertSuccessMsg').style.display = 'block'; $('alertEmail').value = ''; $('alertTime').value = ''; }
+        }
+
+        /* ---- Mascotte ---- */
+        const mascotLines = ["🦎 Prêt à ouvrir l'œil ?", "🦎 Astuce : visite la boutique AVANT l'ouverture.", "🦎 Pas de bot, pas de triche, que du talent.", "🦎 Un pseudo suffit. Vraiment."];
+        let mascotIdx = 0;
+        $('mascot').addEventListener('click', () => { mascotIdx = (mascotIdx + 1) % mascotLines.length; document.querySelector('.mascot-content h3').innerText = mascotLines[mascotIdx]; });
+
+        /* ---- Modale de jeu ---- */
+        function showStep(n) {
+            currentStep = n;
+            for (let i = 1; i <= 6; i++) $('step' + i).style.display = (i === n) ? 'block' : 'none';
+            const visual = Math.min(n, 4);
+            document.querySelectorAll('#stepper i').forEach((d, i) => d.classList.toggle('on', i < visual));
+            $('stepper').style.display = n <= 4 ? 'flex' : 'none';
+        }
+        function stopPolling() { clearInterval(pollId); clearInterval(resultPollId); pollId = resultPollId = null; }
+
+        async function openModal() {
+            $('gameModal').style.display = 'flex';
+            hideErrors();
+            if (getToken()) { await routeByState(); }
+            else { await prepareJoin(); }
+        }
+        function closeModal() { $('gameModal').style.display = 'none'; stopPolling(); }
+
+        async function prepareJoin() {
+            showStep(1);
+            $('userPseudo').value = ''; $('humanCaptcha').value = ''; $('botField').value = ''; $('acceptCgu').checked = false;
+            const form = $('joinForm'), notice = $('joinNotice');
+            if (!wave || wave.phase !== 'registration') {
+                form.style.display = 'none'; notice.style.display = 'block';
+                notice.innerText = !wave ? "Aucune vague programmée pour le moment."
+                    : wave.phase === 'upcoming' ? `Les inscriptions ouvrent à ${hm(wave.registration_open_at)} (1 h avant le départ de ${hm(wave.start_at)}).`
+                    : "Les inscriptions de cette vague sont closes. La prochaine ouvre bientôt !";
+                return;
+            }
+            form.style.display = 'block'; notice.style.display = 'none';
+            try { captcha = await api('/api/captcha'); $('captchaQ').innerText = captcha.question; }
+            catch (e) { showError('botErrorMsg', msg(e)); }
+        }
+
+        async function handleStep1(e) {
+            e.preventDefault(); hideErrors();
+            try {
+                const d = await api(`/api/waves/${wave.id}/join`, { body: {
+                    pseudo: $('userPseudo').value.trim(), captcha_id: captcha && captcha.id, captcha_answer: $('humanCaptcha').value, website_url_check: $('botField').value
+                }});
+                localStorage.setItem('lezard_token', d.token);
+                wave = d.wave; renderWaves();
+                await routeByState();
+            } catch (err) {
+                showError('botErrorMsg', msg(err));
+                if (err.message === 'captcha_failed' || err.message === 'pseudo_taken') { try { captcha = await api('/api/captcha'); $('captchaQ').innerText = captcha.question; $('humanCaptcha').value = ''; } catch (_) {} }
+            }
+        }
+
+        /** Décide quel écran afficher à partir de l'état serveur. Appelé à l'ouverture et à chaque poll. */
+        async function routeByState() {
+            try { me = await api('/api/me'); }
+            catch (err) { if (err.status === 401) { localStorage.removeItem('lezard_token'); return prepareJoin(); } return showError('botErrorMsg', msg(err)); }
+            wave = me.wave;
+            $('waitingPseudo').innerText = me.pseudo; $('generatedPlayerCode').innerText = me.player_code;
+            $('devStartBtn').style.display = wave.dev_mode && !me.answered ? 'block' : 'none';
+
+            if (me.answered || me.phase === 'finished' || me.phase === 'drawn') return renderResult();
+            if (me.phase === 'running') return renderGame();
+            // upcoming / registration / locked → salle d'attente, on attend l'ouverture
+            if (currentStep !== 2) showStep(2);
+            if (!pollId) pollId = setInterval(routeByState, 3000);
+        }
+
+        function leaveWaitingRoom() { localStorage.removeItem('lezard_token'); stopPolling(); me = null; prepareJoin(); refreshWaves(); }
+
+        async function devStartNow() {
+            try { await api('/api/dev/start-now', { body: {} }); await routeByState(); } catch (e) { alert(msg(e)); }
+        }
+
+        /* ---- Énigmes ---- */
+        let timerId = null;
+        function renderGame() {
+            clearInterval(pollId); pollId = null;
+            if (currentStep !== 3) {
+                showStep(3);
+                $('puzzleList').innerHTML = me.puzzles.map((p, i) => `
+                    <div class="modal-box highlight" style="text-align: center;">
+                        <span style="font-size: 0.8rem; color: var(--accent); display: block; font-weight: bold;">Énigme ${i + 1} · boutique partenaire</span>
+                        <strong style="font-size: 1.05rem;">${p.question}</strong>
+                        ${p.hint_url ? `<a href="${p.hint_url}" target="_blank" rel="noopener" style="display:block; font-size:0.78rem; color: var(--primary); margin-top:0.4rem;">Ouvrir la page où chercher ↗</a>` : ''}
+                    </div>
+                    <label>Réponse énigme ${i + 1}</label>
+                    <input type="text" class="answer-input" placeholder="ta réponse" required autocomplete="off" style="text-align: center;">`).join('');
+                $('codeInput').value = '';
+                $('shopLinkGame').href = wave.partner.shop_url;
+            }
+            $('attemptsLeft').innerText = me.attempts_left;
+            clearInterval(timerId);
+            const end = wave.qualification_end_at, el = $('qualTimer');
+            timerId = setInterval(() => {
+                const left = end - now();
+                el.innerText = fmtDuration(left);
+                el.style.color = left < 30000 ? 'var(--danger)' : 'var(--accent)';
+                if (left <= 0) { clearInterval(timerId); routeByState(); }
+            }, 250);
+        }
+
+        async function handleGameSubmit(e) {
+            e.preventDefault(); hideErrors();
+            const answers = [...document.querySelectorAll('.answer-input')].map(i => i.value);
+            try {
+                const d = await api('/api/answer', { body: { answers, player_code: $('codeInput').value } });
+                if (d.result === 'wrong') {
+                    me.attempts_left = d.attempts_left; $('attemptsLeft').innerText = d.attempts_left;
+                    if (d.attempts_left > 0) return showError('gameErrorMsg', `❌ Au moins une réponse est fausse. Il te reste ${d.attempts_left} tentative${d.attempts_left > 1 ? 's' : ''}.`);
+                }
+                clearInterval(timerId);
+                await routeByState();
+            } catch (err) {
+                if (err.message === 'window_closed' || err.message === 'already_answered') { clearInterval(timerId); return routeByState(); }
+                showError('gameErrorMsg', msg(err));
+            }
+        }
+
+        /* ---- Résultat ---- */
+        function renderResult() {
+            clearInterval(timerId); clearInterval(pollId); pollId = null;
+            if (currentStep !== 4) { showStep(4); launched = false; }
+            const title = $('resultTitle'), emoji = $('resultEmoji'), text = $('resultText'), rank = $('resultRank');
+            if (me.qualified) {
+                emoji.innerText = '🏆'; title.innerText = 'Qualifié !'; title.style.color = 'var(--primary)';
+                text.innerHTML = `Bravo <strong style="color: var(--primary);">${me.pseudo}</strong>, tes 2 réponses sont justes dans le temps imparti.`;
+                $('finalChrono').innerText = me.chrono;
+                rank.innerText = `Position ${me.rank} sur ${me.qualified_count} qualifié${me.qualified_count > 1 ? 's' : ''} (chrono certifié serveur)`;
+                if (!launched) { launchConfetti(); launched = true; }
+            } else {
+                const reasons = { too_fast: ['🤖', 'Réponse trop rapide pour être humaine', 'Une réponse en moins de 20 s est incompatible avec une vraie recherche dans la boutique. La vague est terminée pour toi.'],
+                                  no_attempts: ['❌', 'Plus de tentatives', 'Tes 3 essais sont épuisés. La prochaine vague est dans 30 minutes !'] };
+                const [em, ti, tx] = reasons[me.reject_reason] || ['⏰', 'Temps écoulé', 'La fenêtre de qualification est fermée. La prochaine vague est dans 30 minutes !'];
+                emoji.innerText = em; title.innerText = ti; title.style.color = 'var(--danger)';
+                text.innerHTML = `Dommage <strong>${me.pseudo}</strong>. ${tx}`;
+                $('finalChrono').innerText = '—'; rank.innerText = 'Hors qualification';
+            }
+            const win = $('winBlock'), pending = $('drawPending');
+            if (me.phase === 'drawn') {
+                pending.style.display = 'none';
+                win.style.display = me.is_winner && !me.claimed ? 'block' : 'none';
+                $('notWinner').style.display = me.qualified && !me.is_winner ? 'block' : 'none';
+                $('claimedNote').style.display = me.claimed ? 'block' : 'none';
+                clearInterval(resultPollId); resultPollId = null;
+            } else {
+                win.style.display = 'none'; $('notWinner').style.display = 'none'; $('claimedNote').style.display = 'none';
+                pending.style.display = me.qualified ? 'block' : 'none';
+                pending.innerHTML = `⏳ Attribution des lots après la clôture (${hm(wave.qualification_end_at)}). Cette page se mettra à jour toute seule.` +
+                    (wave.dev_mode ? ` <button type="button" class="submit-btn ghost" style="margin-top:0.6rem" onclick="devDraw()">Simuler le tirage (test)</button>` : '');
+                if (!resultPollId) resultPollId = setInterval(routeByState, 5000);
+            }
+        }
+        let launched = false;
+        async function devDraw() { try { await api('/api/dev/draw', { body: {} }); await routeByState(); refreshWinners(); } catch (e) { alert(msg(e)); } }
+
+        /* ---- Réclamation du lot : seul moment où un numéro est demandé ---- */
+        async function handleClaimStep1(e) {
+            e.preventDefault(); hideErrors();
+            try {
+                const d = await api('/api/claim/request', { body: { phone: $('userPhone').value } });
+                $('displayPhone').innerText = d.phone_masked;
+                $('devCode').innerText = d.dev_code ? `(Mode test : code ${d.dev_code})` : '';
+                $('claimForm1').style.display = 'none'; $('claimForm2').style.display = 'block';
+            } catch (err) { showError('claimErrorMsg', msg(err)); }
+        }
+        async function handleClaimStep2(e) {
+            e.preventDefault(); hideErrors();
+            try { await api('/api/claim/verify', { body: { code: $('smsCode').value } }); $('claimPseudo').innerText = me.pseudo; showStep(6); }
+            catch (err) { showError('claimErrorMsg', msg(err)); }
+        }
+        function goToClaim() { $('claimForm1').style.display = 'block'; $('claimForm2').style.display = 'none'; $('userPhone').value = ''; $('smsCode').value = ''; showStep(5); }
+
+        /* ---- Confettis ---- */
+        function launchConfetti() {
+            const box = document.querySelector('#gameModal .modal');
+            const colors = ['#22d3a8', '#ffb84d', '#ff6b6b', '#f3f6fb', '#6ea8ff'];
+            for (let i = 0; i < 45; i++) {
+                const c = document.createElement('div'); c.className = 'confetti';
+                c.style.left = Math.random() * 100 + '%'; c.style.background = colors[i % colors.length]; c.style.animationDelay = (Math.random() * 0.6) + 's';
+                box.appendChild(c); setTimeout(() => c.remove(), 3500);
+            }
+        }
+
+        /* ---- Divers ---- */
+        window.addEventListener('scroll', () => { const h = document.documentElement; $('scrollBar').style.width = ((h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100 || 0) + '%'; });
+        document.querySelectorAll('.modal-overlay').forEach(ov => ov.addEventListener('click', e => { if (e.target === ov) { ov.style.display = 'none'; if (ov.id === 'gameModal') stopPolling(); } }));
+
+        const legalTexts = {
+            mentions: { title: "⚖️ Mentions légales", content: `
+                <p style="color: var(--info); font-size: 0.8rem;">🧪 Prototype : les champs entre crochets sont à compléter avant toute mise en ligne publique.</p>
+                <p><strong>Éditeur du site :</strong><br>[Nom / raison sociale]<br>[Forme juridique et capital, si société]<br>[Adresse complète du siège]<br>[N° SIREN / RCS]<br>Directeur de la publication : [Nom]</p>
+                <p><strong>Hébergeur :</strong><br>[Nom de l'hébergeur]<br>[Adresse complète]<br>[Téléphone]</p>
+                <p><strong>Contact :</strong> contact@pas-de-lezard.fr</p>
+                <p>Conformément à la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique.</p>` },
+            cgu: { title: "📜 Règlement officiel & CGU", content: `
+                <p style="color: var(--info); font-size: 0.8rem;">🧪 Version de travail (prototype). À faire relire avant lancement ; le dépôt du règlement auprès d'un commissaire de justice est recommandé.</p>
+                <p><strong>Article 1 — Organisation</strong><br>Pas-de-Lézard organise des jeux promotionnels gratuits, sans obligation d'achat, par sessions appelées « vagues ».</p>
+                <p><strong>Article 2 — Participation</strong><br>Ouvert à toute personne majeure résidant en France métropolitaine. La participation ne nécessite qu'un pseudo. <strong>Aucun numéro de téléphone, aucune adresse email et aucun moyen de paiement ne sont requis pour jouer.</strong> Chaque vague est limitée à 500 participants. Les inscriptions ouvrent 1 heure avant le départ et se clôturent 1 minute avant.</p>
+                <p><strong>Article 3 — Déroulement</strong><br>Dès l'inscription, le participant accède à une salle d'attente lui permettant de découvrir la boutique partenaire. Au top départ, 2 énigmes portant sur des détails visuels de cette boutique sont communiquées simultanément à tous les participants, sous forme de variantes individualisées.</p>
+                <p><strong>Article 4 — Qualification et attribution des lots</strong><br>Est <strong>qualifié</strong> tout participant ayant fourni les 2 bonnes réponses dans le délai de qualification (5 minutes par défaut, indiqué avant chaque vague), horodaté par le serveur. Une réponse fournie en un temps incompatible avec une recherche humaine dans la boutique partenaire est rejetée. Les lots sont attribués parmi les qualifiés selon la modalité annoncée avant chaque vague (désignation aléatoire parmi les qualifiés ou classement au chrono). Le chrono serveur départage les égalités.</p>
+                <p><strong>Article 5 — Remise des lots</strong><br>Les gagnants sont invités à fournir un numéro de mobile <strong>uniquement</strong> pour la remise du lot (SMS gratuit, non surtaxé). Ce numéro est supprimé après remise.</p>
+                <p><strong>Article 6 — Responsabilité technique</strong><br>Pas-de-Lézard ne saurait être tenu responsable des dysfonctionnements liés au réseau ou au matériel du participant. Seul l'horodatage enregistré sur les serveurs fait foi.</p>
+                <p><strong>Article 7 — Anti-fraude</strong><br>L'usage de robots, scripts ou tout procédé automatisé est interdit. Toute personne surprise sera radiée de la vague et privée de son lot, sans recours.</p>` },
+            confidentialite: { title: "🔒 Politique de confidentialité", content: `
+                <p><strong>1. Données pour jouer :</strong> un pseudo et une empreinte technique anonymisée de la connexion (anti-multicompte), conservés le temps de la vague et de l'affichage du classement.</p>
+                <p><strong>2. Données des gagnants :</strong> un numéro de mobile, collecté uniquement en cas de gain, utilisé pour la remise du lot puis supprimé.</p>
+                <p><strong>3. Alerte email (facultative) :</strong> l'adresse sert exclusivement à prévenir des prochaines vagues ; désinscription possible à tout moment.</p>
+                <p><strong>4. Vos droits :</strong> accès, rectification, suppression via contact@pas-de-lezard.fr. Responsable de traitement : [à compléter].</p>` },
+            faq: { title: "❓ Foire aux questions", content: `
+                <p><strong>Faut-il donner son numéro de téléphone pour jouer ?</strong><br>Non. Un pseudo suffit. Le numéro n'est demandé qu'aux gagnants, pour leur remettre le lot.</p>
+                <p><strong>Est-ce un tirage au sort ?</strong><br>Non : il faut d'abord résoudre les 2 énigmes dans le temps imparti pour être qualifié. Les lots sont ensuite attribués parmi les qualifiés, selon la règle annoncée avant chaque vague.</p>
+                <p><strong>Ma connexion est lente, suis-je désavantagé ?</strong><br>Le temps de qualification est large (5 minutes) : ce qui compte, c'est de trouver les indices dans la boutique, pas la vitesse de ta connexion.</p>
+                <p><strong>C'est vraiment gratuit ?</strong><br>Oui, sans obligation d'achat et sans carte bancaire. Les lots sont offerts par les boutiques partenaires.</p>` }
+        };
+        function openLegalModal(type) { const d = legalTexts[type]; if (!d) return; $('legalTitle').innerHTML = d.title; $('legalBody').innerHTML = d.content; $('legalModal').style.display = 'flex'; }
+        function closeLegalModal() { $('legalModal').style.display = 'none'; }
+
+        /* ---- Démarrage ---- */
+        (async () => {
+            await syncTime();
+            await refreshWaves();
+            refreshTicker(); refreshWinners();
+            setInterval(refreshWaves, 10000);
+            setInterval(refreshTicker, 15000);
+            setInterval(syncTime, 60000);
+        })();
+
+    </script>
+</body>
+</html>
