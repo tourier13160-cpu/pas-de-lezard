@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pas-de-Lézard — Console d'administration</title>
+<style>
+  :root {
+    --bg: #0b1220; --card: #131f38; --card2: #16213e; --border: #223256;
+    --primary: #22d3a8; --primary-dark: #14b892; --accent: #ffb84d;
+    --danger: #ff6b6b; --ok: #4ade80; --muted: #93a0bd; --text: #f3f6fb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5; padding: 1.5rem;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .card {
+    background: linear-gradient(165deg, var(--card2), var(--card));
+    border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem;
+  }
+  .card h2 { font-size: 1.1rem; margin-bottom: 0.25rem; }
+  .card .hint { color: var(--muted); font-size: 0.82rem; margin-bottom: 1.1rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.9rem; }
+  label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.3rem; font-weight: 600; }
+  input, select {
+    width: 100%; padding: 0.7rem; border-radius: 9px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 0.95rem; font-family: inherit;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--primary); }
+  button {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #06251d;
+    font-weight: 700; padding: 0.85rem 1.6rem; border: none; border-radius: 10px;
+    cursor: pointer; font-size: 1rem; font-family: inherit; margin-top: 1.1rem;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); margin-left: 0.5rem; }
+  .out {
+    background: #0a0f1c; border: 1px solid var(--border); border-radius: 10px;
+    padding: 1rem; font-family: Consolas, 'Courier New', monospace; font-size: 0.82rem;
+    white-space: pre-wrap; word-break: break-word; margin-top: 1rem; max-height: 340px; overflow-y: auto;
+  }
+  .out.ok { border-color: rgba(74,222,128,0.5); }
+  .out.err { border-color: rgba(255,107,107,0.5); }
+  .note { font-size: 0.8rem; color: var(--muted); background: rgba(110,168,255,0.08);
+    border: 1px solid rgba(110,168,255,0.3); border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1.25rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.75rem; }
+  th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .pill { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+  .pill.registration { background: rgba(34,211,168,0.15); color: var(--primary); }
+  .pill.running { background: rgba(255,184,77,0.15); color: var(--accent); }
+  .pill.upcoming, .pill.locked { background: rgba(147,160,189,0.15); color: var(--muted); }
+  .pill.finished, .pill.drawn { background: rgba(255,107,107,0.15); color: var(--danger); }
+  details { margin-top: 0.75rem; }
+  summary { cursor: pointer; color: var(--muted); font-size: 0.82rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>🦎 Console d'administration</h1>
+  <p class="sub">Pas-de-Lézard — gestion des vagues, sans terminal.</p>
+
+  <div class="note">
+    Cet outil agit directement sur ton site <strong>app.pas-de-lezard.fr</strong>. Garde-le hors ligne : il contient ton jeton d'administration.
+  </div>
+
+  <!-- ===================== CONNEXION ===================== -->
+  <div class="card">
+    <h2>1. Connexion</h2>
+    <p class="hint">Ces deux valeurs sont déjà remplies. Tu peux les modifier si tu en changes un jour.</p>
+    <div class="grid">
+      <div>
+        <label>Adresse du site</label>
+        <input id="base" value="https://app.pas-de-lezard.fr">
+      </div>
+      <div>
+        <label>Jeton d'administration</label>
+        <input id="token" value="lezard-admin-9f3a7c2e8b41d650">
+      </div>
+    </div>
+    <button class="ghost" onclick="chargerVagues()">Tester la connexion</button>
+  </div>
+
+  <!-- ===================== NOUVELLE VAGUE ===================== -->
+  <div class="card">
+    <h2>2. Programmer une nouvelle vague</h2>
+    <p class="hint">C'est ce qui « remet le site à zéro » : une vague plus récente prend automatiquement la place de l'ancienne sur la page d'accueil.</p>
+
+    <div class="grid">
+      <div>
+        <label>Date de la vague</label>
+        <input type="date" id="date">
+      </div>
+      <div>
+        <label>Heure de départ (heure française)</label>
+        <input type="time" id="heure" value="20:00">
+      </div>
+      <div>
+        <label>Durée affichée (minutes)</label>
+        <input type="number" id="duree" value="20" min="1" max="180">
+      </div>
+      <div>
+        <label>Nombre de lots</label>
+        <input type="number" id="lots" value="10" min="1" max="200">
+      </div>
+      <div>
+        <label>Temps pour répondre (secondes)</label>
+        <input type="number" id="qualif" value="300" min="30" max="3600" step="30">
+      </div>
+      <div>
+        <label>Ouverture des inscriptions</label>
+        <select id="ouv">
+          <option value="0">Immédiatement</option>
+          <option value="15">15 minutes avant</option>
+          <option value="30">30 minutes avant</option>
+          <option value="60" selected>1 heure avant</option>
+          <option value="120">2 heures avant</option>
+          <option value="180">3 heures avant</option>
+        </select>
+      </div>
+      <div>
+        <label>Places disponibles</label>
+        <input type="number" id="places" value="500" min="1" max="5000">
+      </div>
+      <div>
+        <label>Partenaire</label>
+        <select id="partenaire"><option value="1">Chargement…</option></select>
+      </div>
+    </div>
+
+    <div style="margin-top:1rem;">
+      <label>Tentatives de réponse par joueur</label>
+      <input type="number" id="tentatives" value="3" min="1" max="10" style="max-width:200px;">
+    </div>
+
+    <button id="btnCreer" onclick="creerVague()">Créer la vague</button>
+    <button class="ghost" onclick="remplirMaintenant()">Tester tout de suite</button>
+
+    <div id="outCreer"></div>
+  </div>
+
+  <!-- ===================== ETAT ===================== -->
+  <div class="card">
+    <h2>3. État des vagues</h2>
+    <p class="hint">Clique pour rafraîchir.</p>
+    <button class="ghost" style="margin-left:0" onclick="chargerVagues()">Rafraîchir</button>
+    <div id="tableVagues"></div>
+    <div id="outVagues"></div>
+  </div>
+
+  <div class="card">
+    <h2>4. Statistiques d'une vague</h2>
+    <p class="hint">Le tableau à montrer à un partenaire : inscrits, qualifiés, chrono moyen, rejets.</p>
+    <div style="display:flex; gap:0.75rem; align-items:flex-end; flex-wrap:wrap;">
+      <div style="flex:1; min-width:160px;">
+        <label>Numéro de la vague</label>
+        <input type="number" id="statId" placeholder="ex: 3" min="1">
+      </div>
+      <button style="margin-top:0" onclick="chargerStats()">Voir les statistiques</button>
+    </div>
+    <div id="outStats"></div>
+  </div>
+
+  <details>
+    <summary>Que font ces boutons, exactement ?</summary>
+    <div class="out" style="margin-top:0.75rem;">
+Créer la vague :
+  Programme une session avec les réglages choisis. Les inscriptions
+  s'ouvrent selon le délai indiqué, et se ferment 1 minute avant le départ.
+
+Tester tout de suite :
+  Programme une vague qui démarre dans 2 minutes, inscriptions déjà
+  ouvertes. Pratique pour vérifier que tout fonctionne.
+
+État des vagues :
+  Liste tes vagues avec leur phase :
+    upcoming     = pas encore ouverte aux inscriptions
+    registration = inscriptions OUVERTES (c'est ce que tu veux voir)
+    locked       = inscriptions fermées, départ imminent
+    running      = la partie est en cours
+    finished     = la fenêtre de réponse est close
+    drawn        = les lots ont été attribués
+
+Statistiques :
+  Inscrits, qualifiés, chrono moyen, nombre de réponses trop rapides
+  (bots), réclamations de lots.
+    </div>
+  </details>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function api(path, opts = {}) {
+  const base = $('base').value.replace(/\/$/, '');
+  const headers = { 'Content-Type': 'application/json', 'x-admin-token': $('token').value.trim() };
+  return fetch(base + path, {
+    method: opts.method || (opts.body ? 'POST' : 'GET'),
+    headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  }).then(async r => {
+    const txt = await r.text();
+    let data;
+    try { data = JSON.parse(txt); } catch (e) { data = txt; }
+    if (!r.ok) throw { status: r.status, data };
+    return data;
+  });
+}
+
+function show(el, msg, cls) {
+  el.className = 'out ' + (cls || '');
+  el.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2);
+}
+
+/* ---- Initialisation ---- */
+(function init() {
+  const now = new Date();
+  $('date').value = now.toISOString().slice(0, 10);
+  const h = String(now.getHours() + 1).padStart(2, '0');
+  $('heure').value = h + ':00';
+})();
+
+/* ---- Partenaires ---- */
+async function chargerPartenaires() {
+  try {
+    const list = await api('/api/admin/partners');
+    $('partenaire').innerHTML = list.map(p =>
+      `<option value="${p.id}">${p.name} — ${p.shop_url}</option>`).join('');
+  } catch (e) {
+    $('partenaire').innerHTML = '<option value="1">Partenaire 1 (par défaut)</option>';
+  }
+}
+
+/* ---- Vagues ---- */
+async function chargerVagues() {
+  const el = $('outVagues');
+  show(el, 'Chargement…');
+  try {
+    const list = await api('/api/admin/waves');
+    if (!list.length) { $('tableVagues').innerHTML = ''; return show(el, 'Aucune vague programmée.', 'ok'); }
+
+    const lignes = list.map(w => {
+      const d = new Date(w.start_at);
+      const date = d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      return `<tr>
+        <td><strong>#${w.id}</strong></td>
+        <td>${date}</td>
+        <td><span class="pill ${w.phase}">${w.phase}</span></td>
+        <td>${w.places_left !== undefined ? w.places_left : '—'}</td>
+        <td>${w.prizes_count} lots</td>
+        <td>${w.status === 'drawn' ? '🎁 tirée' : '—'}</td>
+      </tr>`;
+    }).join('');
+
+    $('tableVagues').innerHTML = `<table>
+      <tr><th>Vague</th><th>Départ</th><th>Phase</th><th>Places</th><th>Lots</th><th>Tirage</th></tr>
+      ${lignes}
+    </table>`;
+
+    const active = list.find(w => w.phase === 'registration' || w.phase === 'running');
+    show(el, active
+      ? `✅ Vague #${active.id} est active (${active.phase}). Ouvre le site et recharge avec Ctrl+F5.`
+      : 'Aucune vague ouverte aux inscriptions actuellement. Crée-en une ci-dessus.', 'ok');
+  } catch (e) {
+    show(el, messageErreur(e), 'err');
+  }
+}
+
+/* ---- Création ---- */
+function isoDepuisLocal(dateStr, heureStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [hh, mm] = heureStr.split(':').map(Number);
+  const local = new Date(y, m - 1, d, hh, mm, 0);
+  return local.toISOString();
+}
+
+async function creerVague(forceStart) {
+  const el = $('outCreer');
+  const btn = $('btnCreer');
+  btn.disabled = true;
+  show(el, 'Création en cours…');
+
+  const start = forceStart || isoDepuisLocal($('date').value, $('heure').value);
+  const body = {
+    partner_id: parseInt($('partenaire').value, 10) || 1,
+    start_at: start,
+    duration_min: parseInt($('duree').value, 10),
+    prizes_count: parseInt($('lots').value, 10),
+    qualification_seconds: parseInt($('qualif').value, 10),
+    registration_open_before_min: forceStart ? 60 : parseInt($('ouv').value, 10),
+    capacity: parseInt($('places').value, 10),
+    max_attempts: parseInt($('tentatives').value, 10)
+  };
+
+  try {
+    const r = await api('/api/admin/waves', { body });
+    const heureFr = new Date(body.start_at).toLocaleString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' });
+    show(el, `✅ Vague #${r.id} créée.\n\nDépart : ${heureFr}\nInscriptions : ${forceStart ? 'ouvertes immédiatement' : (body.registration_open_before_min + ' min avant le départ')}\nDurée : ${body.duration_min} min · Lots : ${body.prizes_count} · Réponse : ${body.qualification_seconds} s`, 'ok');
+    chargerVagues();
+  } catch (e) {
+    show(el, messageErreur(e), 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function remplirMaintenant() {
+  const dansDeuxMin = new Date(Date.now() + 2 * 60000);
+  $('date').value = dansDeuxMin.toISOString().slice(0, 10);
+  $('heure').value = String(dansDeuxMin.getHours()).padStart(2, '0') + ':' + String(dansDeuxMin.getMinutes()).padStart(2, '0');
+  $('ouv').value = '0';
+  creerVague();
+}
+
+/* ---- Statistiques ---- */
+async function chargerStats() {
+  const el = $('outStats');
+  const id = parseInt($('statId').value, 10);
+  if (!id) return show(el, 'Indique un numéro de vague.', 'err');
+  show(el, 'Chargement…');
+  try {
+    const s = await api('/api/admin/waves/' + id + '/stats');
+    show(el,
+`Inscrits          : ${s.joined || 0}
+Qualifiés         : ${s.qualified || 0}
+Gagnants          : ${s.winners || 0}
+Lots réclamés     : ${s.claimed || 0}
+
+Chrono moyen      : ${s.avg_qualified || '—'}
+Meilleur chrono   : ${s.fastest || '—'}
+Chrono le plus lent : ${s.slowest || '—'}
+
+Sans réponse      : ${s.no_answer || 0}
+Trop rapides (bots) : ${s.too_fast || 0}
+Tentatives épuisées : ${s.no_attempts || 0}
+Total de réponses   : ${s.total_attempts || 0}
+
+Adresses IP distinctes : ${s.distinct_ips || 0}`, 'ok');
+  } catch (e) {
+    show(el, messageErreur(e), 'err');
+  }
+}
+
+function messageErreur(e) {
+  if (e.status === 401) return "❌ Accès refusé : le jeton d'administration est incorrect.";
+  if (e.status === 404) return "❌ Introuvable : vérifie l'adresse du site ou le numéro de vague.";
+  if (!e.status) return "❌ Impossible de joindre le site. Vérifie ta connexion et l'adresse en haut de page.";
+  return "❌ Erreur " + e.status + "\n\n" + (typeof e.data === 'string' ? e.data : JSON.stringify(e.data, null, 2));
+}
+
+/* ---- Démarrage ---- */
+chargerPartenaires();
+chargerVagues();
+</script>
+</body>
+</html>
