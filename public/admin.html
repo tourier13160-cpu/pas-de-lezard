@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pas-de-Lézard — Console d'administration</title>
+<style>
+  :root {
+    --bg: #0b1220; --card: #131f38; --card2: #16213e; --border: #223256;
+    --primary: #22d3a8; --primary-dark: #14b892; --accent: #ffb84d;
+    --danger: #ff6b6b; --ok: #4ade80; --muted: #93a0bd; --text: #f3f6fb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5; padding: 1.5rem;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.25rem; }
+  .card {
+    background: linear-gradient(165deg, var(--card2), var(--card));
+    border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem;
+  }
+  .card h2 { font-size: 1.1rem; margin-bottom: 0.25rem; }
+  .card .hint { color: var(--muted); font-size: 0.82rem; margin-bottom: 1.1rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.9rem; }
+  label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.3rem; font-weight: 600; }
+  input, select, textarea {
+    width: 100%; padding: 0.7rem; border-radius: 9px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 0.95rem; font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+  button {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #06251d;
+    font-weight: 700; padding: 0.8rem 1.5rem; border: none; border-radius: 10px;
+    cursor: pointer; font-size: 0.95rem; font-family: inherit; margin-top: 1rem;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.ghost { background: transparent; border: 1px solid var(--border); color: var(--text); margin-left: 0.5rem; }
+  button.ghost:hover { border-color: var(--primary); color: var(--primary); }
+  button.small { padding: 0.45rem 0.85rem; font-size: 0.82rem; margin: 0 0.3rem 0 0; }
+  button.danger { background: transparent; border: 1px solid rgba(255,107,107,0.5); color: var(--danger); }
+  .out {
+    background: #0a0f1c; border: 1px solid var(--border); border-radius: 10px;
+    padding: 1rem; font-family: Consolas, 'Courier New', monospace; font-size: 0.82rem;
+    white-space: pre-wrap; word-break: break-word; margin-top: 1rem; max-height: 340px; overflow-y: auto;
+  }
+  .out.ok { border-color: rgba(74,222,128,0.5); }
+  .out.err { border-color: rgba(255,107,107,0.5); }
+  .note { font-size: 0.8rem; color: var(--muted); background: rgba(110,168,255,0.08);
+    border: 1px solid rgba(110,168,255,0.3); border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1.25rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.75rem; }
+  th, td { text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .pill { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 20px; font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
+  .pill.registration { background: rgba(34,211,168,0.15); color: var(--primary); }
+  .pill.running { background: rgba(255,184,77,0.15); color: var(--accent); }
+  .pill.upcoming, .pill.locked { background: rgba(147,160,189,0.15); color: var(--muted); }
+  .pill.finished, .pill.drawn { background: rgba(255,107,107,0.15); color: var(--danger); }
+  .pill.good { background: rgba(34,211,168,0.15); color: var(--primary); }
+  .pill.bad { background: rgba(255,107,107,0.15); color: var(--danger); }
+  details { margin-top: 0.75rem; }
+  summary { cursor: pointer; color: var(--muted); font-size: 0.85rem; }
+  .sep { height: 1px; background: var(--border); margin: 1.25rem 0; }
+  .row { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: flex-end; }
+  .empty { color: var(--muted); font-size: 0.88rem; padding: 0.75rem 0; }
+  .urlbox { background: #0a0f1c; border: 1px dashed var(--border); border-radius: 8px; padding: 0.6rem 0.8rem;
+    font-family: Consolas, monospace; font-size: 0.82rem; color: var(--primary); margin-top: 0.5rem; word-break: break-all; }
+  .inline-form { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin-top: 1rem; }
+  .inline-form h4 { font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--accent); }
+  .inline-form button { margin-top: 0.75rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>🦎 Console d'administration</h1>
+  <p class="sub">Pas-de-Lézard — partenaires, énigmes, vagues et statistiques.</p>
+
+  <div class="note">
+    Cet outil agit directement sur ton site <strong>app.pas-de-lezard.fr</strong>. Garde-le hors ligne : il contient ton jeton d'administration.
+  </div>
+
+  <!-- ============ CONNEXION ============ -->
+  <div class="card">
+    <h2>Connexion</h2>
+    <p class="hint">Ces valeurs sont déjà remplies. Modifie-les seulement si tu changes d'adresse ou de jeton.</p>
+    <div class="grid">
+      <div><label>Adresse du site</label><input id="base" value="https://app.pas-de-lezard.fr"></div>
+      <div><label>Jeton d'administration</label><input id="token" value="lezard-admin-9f3a7c2e8b41d650"></div>
+    </div>
+    <button class="ghost" onclick="toutCharger()">Tester la connexion</button>
+    <div id="outConnexion"></div>
+  </div>
+
+  <!-- ============ PARTENAIRES ============ -->
+  <div class="card">
+    <h2>1. Partenaires</h2>
+    <p class="hint">Chaque partenaire a sa boutique en ligne, ses propres énigmes, et ses propres vagues. Un partenaire ne voit ses questions que dans sa boutique.</p>
+
+    <div id="tablePartenaires"></div>
+
+    <div class="inline-form">
+      <h4>➕ Ajouter un partenaire</h4>
+      <div class="grid">
+        <div><label>Nom du commerce</label><input id="pNom" placeholder="ex : Fromagerie du Coin"></div>
+        <div><label>Adresse de sa boutique (lien complet)</label><input id="pUrl" placeholder="https://sa-boutique.fr"></div>
+      </div>
+      <button onclick="creerPartenaire()">Créer le partenaire</button>
+      <div id="outPartenaire"></div>
+    </div>
+  </div>
+
+  <!-- ============ ENIGMES ============ -->
+  <div class="card">
+    <h2>2. Énigmes d'un partenaire</h2>
+    <p class="hint">Il faut <strong>au moins 2 énigmes actives</strong> par partenaire. Le jeu en tire 2 au hasard à chaque joueur : plus tu en as, moins les joueurs auront les mêmes.</p>
+
+    <div class="row">
+      <div style="flex:1; min-width:200px;">
+        <label>Partenaire</label>
+        <select id="pzPartenaire" onchange="chargerPuzzles()"><option>Chargement…</option></select>
+      </div>
+      <button style="margin-top:0" onclick="chargerPuzzles()">Voir ses énigmes</button>
+    </div>
+    <div id="tablePuzzles"></div>
+
+    <div class="inline-form">
+      <h4>➕ Ajouter une énigme</h4>
+      <div style="margin-bottom:0.9rem;">
+        <label>Question posée au joueur</label>
+        <input id="pzQuestion" placeholder="ex : De quelle couleur est l'enseigne au-dessus de la porte ?">
+      </div>
+      <div style="margin-bottom:0.9rem;">
+        <label>Réponses acceptées (séparées par des virgules)</label>
+        <input id="pzReponses" placeholder="ex : rouge, rouge foncé, rouge fonce">
+      </div>
+      <div>
+        <label>Lien de la page où chercher (facultatif)</label>
+        <input id="pzLien" placeholder="https://sa-boutique.fr/la-page-a-visiter">
+      </div>
+      <button onclick="creerPuzzle()">Ajouter l'énigme</button>
+      <div id="outPuzzle"></div>
+    </div>
+  </div>
+
+  <!-- ============ VAGUES ============ -->
+  <div class="card">
+    <h2>3. Programmer une vague</h2>
+    <p class="hint">Une vague est une session de jeu : tous les joueurs inscrits reçoivent les mêmes énigmes au même moment, mais tirées du partenaire choisi.</p>
+
+    <div class="grid">
+      <div>
+        <label>Partenaire de cette vague</label>
+        <select id="partnerId" onchange="verifEnigmes()"><option>Chargement…</option></select>
+      </div>
+      <div><label>Date</label><input type="date" id="date"></div>
+      <div><label>Heure de départ (heure française)</label><input type="time" id="heure" value="20:00"></div>
+      <div><label>Durée affichée (minutes)</label><input type="number" id="duree" value="20" min="1" max="180"></div>
+      <div><label>Nombre de lots</label><input type="number" id="lots" value="10" min="1" max="200"></div>
+      <div><label>Temps pour répondre (secondes)</label><input type="number" id="qualif" value="300" min="30" max="3600" step="30"></div>
+      <div>
+        <label>Ouverture des inscriptions</label>
+        <select id="ouv">
+          <option value="0">Immédiatement</option>
+          <option value="15">15 minutes avant</option>
+          <option value="30">30 minutes avant</option>
+          <option value="60" selected>1 heure avant</option>
+          <option value="120">2 heures avant</option>
+          <option value="180">3 heures avant</option>
+        </select>
+      </div>
+      <div><label>Places disponibles</label><input type="number" id="places" value="500" min="1" max="5000"></div>
+      <div><label>Tentatives par joueur</label><input type="number" id="tentatives" value="3" min="1" max="10"></div>
+    </div>
+
+    <div id="warnEnigmes"></div>
+
+    <button id="btnCreer" onclick="creerVague()">Créer la vague</button>
+    <button class="ghost" onclick="remplirMaintenant()">Tester tout de suite</button>
+    <div id="outCreer"></div>
+  </div>
+
+  <!-- ============ ETAT ============ -->
+  <div class="card">
+    <h2>4. État des vagues</h2>
+    <p class="hint">Les vagues les plus récentes en haut. La colonne « Inscriptions » te donne le lien à montrer aux joueurs.</p>
+    <button class="ghost" style="margin-left:0" onclick="chargerVagues()">Rafraîchir</button>
+    <div id="tableVagues"></div>
+    <div id="outVagues"></div>
+  </div>
+
+  <!-- ============ STATS ============ -->
+  <div class="card">
+    <h2>5. Statistiques d'une vague</h2>
+    <p class="hint">Le tableau à montrer à un partenaire : inscrits, qualifiés, chrono moyen, rejets, lots réclamés.</p>
+    <div class="row">
+      <div style="flex:1; min-width:160px;">
+        <label>Numéro de la vague</label>
+        <input type="number" id="statId" placeholder="ex : 3" min="1">
+      </div>
+      <button style="margin-top:0" onclick="chargerStats()">Voir les statistiques</button>
+    </div>
+    <div id="outStats"></div>
+  </div>
+
+  <details>
+    <summary>Comment brancher le lien d'un partenaire sur le site ?</summary>
+    <div class="out" style="margin-top:0.75rem;">
+Le lien du partenaire n'est PAS écrit dans le code du site.
+Il est stocké dans la base de données, et le site le lit tout seul.
+
+Concretement, dans l'ordre :
+
+  1. Onglet « Partenaires » ci-dessus
+     -> cree le commerce avec sa vraie adresse de boutique.
+
+  2. Onglet « Enigmes »
+     -> ajoute au moins 2 questions portant sur des details
+        visibles SUR SA boutique, avec les reponses acceptees.
+
+  3. Onglet « Programmer une vague »
+     -> choisis ce partenaire dans la liste, mets la date et l'heure,
+        puis clique sur « Creer la vague ».
+
+  4. Le site affiche alors automatiquement :
+     - le nom de la boutique dans la salle d'attente
+     - un bouton « Visiter la boutique partenaire » qui pointe
+       vers l'adresse que tu as saisie
+     - les 2 enigmes de CE partenaire aux joueurs de cette vague
+
+Tu peux changer l'adresse d'un partenaire a tout moment :
+clique sur « Modifier » dans le tableau des partenaires.
+Les vagues deja passees gardent l'historique.
+
+Plusieurs partenaires en parallele :
+  cree autant de partenaires que tu veux, chacun avec ses enigmes.
+  Chaque vague pioche dans le partenaire que tu lui assignes.
+  Un partenaire ne peut pas etre utilise pour une vague
+  s'il n'a pas au moins 2 enigmes actives.
+    </div>
+  </details>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let partenaires = [];
+
+/* ---------- Appels API ---------- */
+function api(path, opts = {}) {
+  const base = $('base').value.replace(/\/$/, '');
+  const headers = { 'Content-Type': 'application/json', 'x-admin-token': $('token').value.trim() };
+  return fetch(base + path, {
+    method: opts.method || (opts.body ? 'POST' : 'GET'),
+    headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  }).then(async r => {
+    const txt = await r.text();
+    let data;
+    try { data = JSON.parse(txt); } catch (e) { data = txt; }
+    if (!r.ok) throw { status: r.status, data };
+    return data;
+  });
+}
+function show(el, msg, cls) { el.className = 'out ' + (cls || ''); el.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2); }
+function messageErreur(e) {
+  if (e.status === 401) return "❌ Accès refusé : le jeton d'administration est incorrect.";
+  if (e.status === 404) return "❌ Introuvable : vérifie l'adresse du site ou le numéro de vague.";
+  if (!e.status) return "❌ Impossible de joindre le site. Vérifie ta connexion et l'adresse en haut de page.";
+  const d = e.data;
+  let extra = typeof d === 'string' ? d : (d && d.hint ? d.hint : JSON.stringify(d, null, 2));
+  const noms = { not_enough_puzzles: "❌ Pas assez d'énigmes", partner_in_use: "❌ Partenaire utilisé par une vague",
+                 invalid_url: "❌ Adresse de boutique invalide", invalid_partner: "❌ Champs incomplets", invalid_puzzle: "❌ Énigme incomplète" };
+  const titre = noms[d && d.error] ? noms[d.error] + "\n\n" : ("❌ Erreur " + e.status + "\n\n");
+  return titre + extra;
+}
+
+/* ---------- Initialisation ---------- */
+(function init() {
+  const now = new Date();
+  $('date').value = now.toISOString().slice(0, 10);
+  $('heure').value = String(now.getHours() + 1).padStart(2, '0') + ':00';
+})();
+
+/* ---------- Partenaires ---------- */
+async function chargerPartenaires() {
+  try {
+    partenaires = await api('/api/admin/partners');
+  } catch (e) {
+    partenaires = [];
+    show($('outConnexion'), messageErreur(e), 'err');
+  }
+
+  // Tableau
+  if (!partenaires.length) {
+    $('tablePartenaires').innerHTML = '<p class="empty">Aucun partenaire pour le moment.</p>';
+  } else {
+    $('tablePartenaires').innerHTML = `<table>
+      <tr><th>N°</th><th>Nom</th><th>Boutique</th><th>Énigmes</th><th>Vagues</th><th></th></tr>
+      ${partenaires.map(p => `<tr>
+        <td><strong>#${p.id}</strong></td>
+        <td>${echap(p.name)}</td>
+        <td style="font-size:0.78rem; color:var(--primary); word-break:break-all;">${echap(p.shop_url)}</td>
+        <td>${p.puzzles_active >= 2 ? `<span class="pill good">${p.puzzles_active} actives</span>` : `<span class="pill bad">${p.puzzles_active} active${p.puzzles_active > 1 ? 's' : ''}</span>`}
+            ${p.puzzles_total > p.puzzles_active ? `<span style="font-size:0.72rem;color:var(--muted)"> / ${p.puzzles_total}</span>` : ''}</td>
+        <td>${p.waves_count}</td>
+        <td style="white-space:nowrap;">
+          <button class="small ghost" onclick="modifierPartenaire(${p.id})">Modifier</button>
+          <button class="small danger" onclick="supprimerPartenaire(${p.id})">✕</button>
+        </td>
+      </tr>`).join('')}
+    </table>`;
+  }
+
+  // Listes déroulantes
+  const opts = partenaires.map(p => `<option value="${p.id}">#${p.id} — ${echap(p.name)}</option>`).join('');
+  const selPz = $('pzPartenaire'), selW = $('partnerId');
+  const gardePz = selPz.value, gardeW = selW.value;
+  selPz.innerHTML = opts || '<option value="">Aucun partenaire</option>';
+  selW.innerHTML = opts || '<option value="">Aucun partenaire</option>';
+  if (gardePz) selPz.value = gardePz;
+  if (gardeW) selW.value = gardeW;
+
+  if (partenaires.length) { chargerPuzzles(); verifEnigmes(); }
+}
+
+function echap(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+async function creerPartenaire() {
+  const name = $('pNom').value.trim();
+  let url = $('pUrl').value.trim();
+  if (!name || !url) return show($('outPartenaire'), "❌ Remplis le nom et l'adresse de la boutique.", 'err');
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  show($('outPartenaire'), 'Création…');
+  try {
+    const r = await api('/api/admin/partners', { body: { name, shop_url: url } });
+    show($('outPartenaire'), `✅ Partenaire #${r.id} « ${r.name} » créé.\n\nBoutique : ${url}\n\nPense à lui ajouter au moins 2 énigmes dans la section 2.`, 'ok');
+    $('pNom').value = ''; $('pUrl').value = '';
+    await chargerPartenaires();
+    $('pzPartenaire').value = String(r.id);
+    chargerPuzzles();
+  } catch (e) { show($('outPartenaire'), messageErreur(e), 'err'); }
+}
+
+async function modifierPartenaire(id) {
+  const p = partenaires.find(x => Number(x.id) === Number(id));
+  if (!p) return;
+  const nom = prompt('Nom du commerce :', p.name);
+  if (nom === null) return;
+  const url = prompt("Adresse de sa boutique (lien complet) :", p.shop_url);
+  if (url === null) return;
+  try {
+    await api('/api/admin/partners/' + id, { method: 'PATCH', body: { name: nom.trim(), shop_url: url.trim() } });
+    await chargerPartenaires();
+  } catch (e) { alert(messageErreur(e)); }
+}
+
+async function supprimerPartenaire(id) {
+  const p = partenaires.find(x => Number(x.id) === Number(id));
+  if (!confirm(`Supprimer le partenaire « ${p ? p.name : id} » et toutes ses énigmes ?\n\nLes vagues déjà créées ne sont pas touchées.`)) return;
+  try {
+    await api('/api/admin/partners/' + id, { method: 'DELETE' });
+    await chargerPartenaires();
+  } catch (e) { alert(messageErreur(e)); }
+}
+
+/* ---------- Énigmes ---------- */
+async function chargerPuzzles() {
+  const id = $('pzPartenaire').value;
+  const zone = $('tablePuzzles');
+  if (!id) { zone.innerHTML = '<p class="empty">Crée d\'abord un partenaire.</p>'; return; }
+  zone.innerHTML = '<p class="empty">Chargement…</p>';
+  try {
+    const list = await api(`/api/admin/partners/${id}/puzzles`);
+    if (!list.length) { zone.innerHTML = '<p class="empty">Aucune énigme pour ce partenaire. Il en faut au moins 2.</p>'; return; }
+    zone.innerHTML = `<table>
+      <tr><th>N°</th><th>Question</th><th>Réponses acceptées</th><th>État</th><th></th></tr>
+      ${list.map(z => `<tr>
+        <td><strong>#${z.id}</strong></td>
+        <td style="font-size:0.85rem;">${echap(z.question)}${z.hint_url ? `<div style="font-size:0.72rem;color:var(--primary);word-break:break-all;">↳ ${echap(z.hint_url)}</div>` : ''}</td>
+        <td style="font-size:0.78rem; color:var(--muted);">${echap(z.answers.join(' · '))}</td>
+        <td>${z.active ? '<span class="pill good">active</span>' : '<span class="pill bad">désactivée</span>'}</td>
+        <td style="white-space:nowrap;">
+          <button class="small ghost" onclick="basculerPuzzle(${z.id}, ${z.active ? 0 : 1})">${z.active ? 'Désactiver' : 'Activer'}</button>
+          <button class="small danger" onclick="supprimerPuzzle(${z.id})">✕</button>
+        </td>
+      </tr>`).join('')}
+    </table>`;
+  } catch (e) { zone.innerHTML = `<p class="empty">${messageErreur(e)}</p>`; }
+}
+
+async function creerPuzzle() {
+  const partner_id = $('pzPartenaire').value;
+  const question = $('pzQuestion').value.trim();
+  const reponses = $('pzReponses').value.split(',').map(s => s.trim()).filter(Boolean);
+  const hint_url = $('pzLien').value.trim() || null;
+  if (!partner_id) return show($('outPuzzle'), "❌ Choisis d'abord un partenaire.", 'err');
+  if (!question || !reponses.length) return show($('outPuzzle'), "❌ Il faut une question et au moins une réponse.", 'err');
+  show($('outPuzzle'), 'Ajout…');
+  try {
+    const r = await api('/api/admin/puzzles', { body: { partner_id: parseInt(partner_id, 10), question, answers: reponses, hint_url } });
+    show($('outPuzzle'), `✅ Énigme #${r.id} ajoutée.\n\nRéponses acceptées : ${reponses.join(' · ')}`, 'ok');
+    $('pzQuestion').value = ''; $('pzReponses').value = ''; $('pzLien').value = '';
+    chargerPuzzles(); chargerPartenaires();
+  } catch (e) { show($('outPuzzle'), messageErreur(e), 'err'); }
+}
+
+async function basculerPuzzle(id, actif) {
+  try { await api('/api/admin/puzzles/' + id, { method: 'PATCH', body: { active: actif } }); chargerPuzzles(); chargerPartenaires(); }
+  catch (e) { alert(messageErreur(e)); }
+}
+async function supprimerPuzzle(id) {
+  if (!confirm('Supprimer cette énigme ?')) return;
+  try { await api('/api/admin/puzzles/' + id, { method: 'DELETE' }); chargerPuzzles(); chargerPartenaires(); }
+  catch (e) { alert(messageErreur(e)); }
+}
+
+/* ---------- Vagues ---------- */
+function isoDepuisLocal(dateStr, heureStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [hh, mm] = heureStr.split(':').map(Number);
+  return new Date(y, m - 1, d, hh, mm, 0).toISOString();
+}
+
+function verifEnigmes() {
+  const id = $('partnerId').value;
+  const p = partenaires.find(x => Number(x.id) === Number(id));
+  const zone = $('warnEnigmes');
+  if (!p) { zone.innerHTML = ''; return; }
+  if (p.puzzles_active < 2) {
+    zone.innerHTML = `<div class="out err" style="margin-top:0.9rem;">⚠️ « ${echap(p.name)} » n'a que ${p.puzzles_active} énigme(s) active(s). Il en faut au moins 2 pour créer une vague avec ce partenaire.</div>`;
+  } else {
+    zone.innerHTML = `<div class="out ok" style="margin-top:0.9rem;">✅ « ${echap(p.name)} » a ${p.puzzles_active} énigmes actives. Prêt pour une vague.\n\nBoutique utilisée : ${echap(p.shop_url)}</div>`;
+  }
+}
+
+async function creerVague(force) {
+  const el = $('outCreer'), btn = $('btnCreer');
+  btn.disabled = true;
+  show(el, 'Création…');
+  const body = {
+    partner_id: parseInt($('partnerId').value, 10),
+    start_at: force || isoDepuisLocal($('date').value, $('heure').value),
+    duration_min: parseInt($('duree').value, 10),
+    prizes_count: parseInt($('lots').value, 10),
+    qualification_seconds: parseInt($('qualif').value, 10),
+    registration_open_before_min: force ? 60 : parseInt($('ouv').value, 10),
+    capacity: parseInt($('places').value, 10),
+    max_attempts: parseInt($('tentatives').value, 10)
+  };
+  try {
+    const r = await api('/api/admin/waves', { body });
+    const quand = new Date(body.start_at).toLocaleString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' });
+    show(el, `✅ Vague #${r.id} créée pour « ${r.partner} ».\n\nDépart : ${quand}\nInscriptions : ${force ? 'ouvertes immédiatement' : (body.registration_open_before_min + ' min avant')}\nDurée : ${body.duration_min} min · Lots : ${body.prizes_count} · Réponse : ${body.qualification_seconds} s`, 'ok');
+    chargerVagues();
+  } catch (e) { show(el, messageErreur(e), 'err'); }
+  finally { btn.disabled = false; }
+}
+
+function remplirMaintenant() {
+  const d = new Date(Date.now() + 2 * 60000);
+  $('date').value = d.toISOString().slice(0, 10);
+  $('heure').value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  $('ouv').value = '0';
+  creerVague();
+}
+
+async function chargerVagues() {
+  const el = $('outVagues');
+  show(el, 'Chargement…');
+  try {
+    const list = await api('/api/admin/waves');
+    if (!list.length) { $('tableVagues').innerHTML = '<p class="empty">Aucune vague programmée.</p>'; return show(el, 'Aucune vague pour le moment.', 'ok'); }
+
+    $('tableVagues').innerHTML = `<table>
+      <tr><th>Vague</th><th>Partenaire</th><th>Départ</th><th>Phase</th><th>Lots</th><th>Lien joueurs</th><th></th></tr>
+      ${list.map(w => {
+        const d = new Date(w.start_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        const ouvert = (w.phase === 'registration' || w.phase === 'running');
+        return `<tr>
+          <td><strong>#${w.id}</strong></td>
+          <td style="font-size:0.82rem;">${echap(w.partner_name || '—')}</td>
+          <td>${d}</td>
+          <td><span class="pill ${w.phase}">${w.phase}</span></td>
+          <td>${w.prizes_count}</td>
+          <td>${ouvert ? '<span class="pill good">ouvert</span>' : '<span style="color:var(--muted);font-size:0.78rem;">—</span>'}</td>
+          <td style="white-space:nowrap;">
+            <button class="small ghost" onclick="ouvrirMaintenant(${w.id})">Ouvrir</button>
+            <button class="small danger" onclick="supprimerVague(${w.id})">✕</button>
+          </td>
+        </tr>`;
+      }).join('')}
+    </table>`;
+
+    const active = list.find(w => w.phase === 'registration');
+    show(el, active
+      ? `✅ Vague #${active.id} ouverte aux inscriptions (partenaire : ${active.partner_name}).\n\nLien à envoyer aux joueurs : https://app.pas-de-lezard.fr`
+      : 'Aucune vague ouverte aux inscriptions. Crée-en une ci-dessus.', 'ok');
+  } catch (e) { show(el, messageErreur(e), 'err'); }
+}
+
+async function ouvrirMaintenant(id) {
+  if (!confirm(`Ouvrir la porte de la vague #${id} immédiatement ?\n\nSon départ sera fixé à maintenant et les joueurs déjà inscrits pourront jouer tout de suite.`)) return;
+  try {
+    await api('/api/admin/waves/' + id + '/start-now', { body: {} });
+    chargerVagues();
+  } catch (e) { alert(messageErreur(e)); }
+}
+
+async function supprimerVague(id) {
+  if (!confirm(`Supprimer la vague #${id} et tous ses participants ?\n\nCette action est définitive.`)) return;
+  try { await api('/api/admin/waves/' + id, { method: 'DELETE' }); chargerVagues(); }
+  catch (e) { alert(messageErreur(e)); }
+}
+
+/* ---------- Stats ---------- */
+async function chargerStats() {
+  const el = $('outStats');
+  const id = parseInt($('statId').value, 10);
+  if (!id) return show(el, 'Indique un numéro de vague.', 'err');
+  show(el, 'Chargement…');
+  try {
+    const s = await api('/api/admin/waves/' + id + '/stats');
+    show(el,
+`Vague #${s.wave.id} — partenaire : ${s.wave.partner_name || '—'}
+Boutique : ${s.wave.partner_url || '—'}
+
+Inscrits            : ${s.joined || 0}
+Qualifiés           : ${s.qualified || 0}
+Gagnants            : ${s.winners || 0}
+Lots réclamés       : ${s.claimed || 0}
+
+Chrono moyen        : ${s.avg_qualified || '—'}
+Meilleur chrono     : ${s.fastest || '—'}
+Chrono le plus lent : ${s.slowest || '—'}
+
+Sans réponse        : ${s.no_answer || 0}
+Trop rapides (bots) : ${s.too_fast || 0}
+Tentatives épuisées : ${s.no_attempts || 0}
+Total de réponses   : ${s.total_attempts || 0}
+
+Adresses IP distinctes : ${s.distinct_ips || 0}`, 'ok');
+  } catch (e) { show(el, messageErreur(e), 'err'); }
+}
+
+/* ---------- Démarrage ---------- */
+async function toutCharger() {
+  show($('outConnexion'), 'Connexion…');
+  try { await api('/api/admin/partners'); show($('outConnexion'), '✅ Connexion établie.', 'ok'); }
+  catch (e) { return show($('outConnexion'), messageErreur(e), 'err'); }
+  await chargerPartenaires();
+  chargerVagues();
+}
+toutCharger();
+</script>
+</body>
+</html>
